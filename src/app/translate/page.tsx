@@ -23,82 +23,41 @@ import {
   Keyboard,
   Globe,
   BookOpen,
-  Sparkles,
-  Menu,
   X,
+  Info,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-const languages = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'it', label: 'Italian' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'ru', label: 'Russian' },
-  { value: 'zh', label: 'Chinese' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'ko', label: 'Korean' },
-  { value: 'ar', label: 'Arabic' },
-  { value: 'hi', label: 'Hindi' },
-]
+import {
+  translate,
+  languages,
+  type Language,
+} from '@/lib/translator'
 
 const presets = [
   { name: 'Spanish', source: 'en', target: 'es', label: '🇪🇸 English → Spanish' },
   { name: 'French', source: 'en', target: 'fr', label: '🇫🇷 English → French' },
   { name: 'German', source: 'en', target: 'de', label: '🇩🇪 English → German' },
   { name: 'Japanese', source: 'en', target: 'ja', label: '🇯🇵 English → Japanese' },
+  { name: 'Chinese', source: 'en', target: 'zh', label: '🇨🇳 English → Chinese' },
 ]
 
 export default function TranslatePage() {
   const [input, setInput] = useState('')
   const [output, setOutput] = useState('')
-  const [sourceLang, setSourceLang] = useState('en')
-  const [targetLang, setTargetLang] = useState('es')
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [sourceLang, setSourceLang] = useState<Language>('en')
+  const [targetLang, setTargetLang] = useState<Language>('es')
   const [copied, setCopied] = useState(false)
   const [showDocs, setShowDocs] = useState(false)
-  const [showDocsMobile, setShowDocsMobile] = useState(false)
+  const [confidence, setConfidence] = useState(0)
+  const [matchType, setMatchType] = useState<'phrase' | 'word' | 'passthrough'>('phrase')
 
   const handleTranslate = () => {
     if (!input.trim()) return
-    setIsProcessing(true)
-    
-    setTimeout(() => {
-      const translations: Record<string, Record<string, string>> = {
-        'es': {
-          'Hello': 'Hola',
-          'Good morning': 'Buenos días',
-          'Thank you': 'Gracias',
-          'Hello, how are you?': 'Hola, ¿cómo estás?',
-        },
-        'fr': {
-          'Hello': 'Bonjour',
-          'Good morning': 'Bonjour',
-          'Thank you': 'Merci',
-          'Hello, how are you?': 'Bonjour, comment allez-vous?',
-        },
-        'de': {
-          'Hello': 'Hallo',
-          'Good morning': 'Guten Morgen',
-          'Thank you': 'Danke',
-          'Hello, how are you?': 'Hallo, wie geht es dir?',
-        },
-        'ja': {
-          'Hello': 'こんにちは',
-          'Good morning': 'おはようございます',
-          'Thank you': 'ありがとう',
-          'Hello, how are you?': 'こんにちは、お元気ですか？',
-        },
-      }
 
-      const langTranslations = translations[targetLang] || translations['es']
-      let translated = langTranslations[input.trim()] || `Translation for "${input.slice(0, 50)}${input.length > 50 ? '...' : ''}" will appear here. Connect to a translation API for actual results.`
-      
-      setOutput(translated)
-      setIsProcessing(false)
-    }, 1000)
+    const result = translate(input, sourceLang, targetLang)
+    setOutput(result.translated)
+    setConfidence(result.confidence)
+    setMatchType(result.matchType)
   }
 
   const handleSwap = () => {
@@ -118,11 +77,19 @@ export default function TranslatePage() {
   const handleReset = () => {
     setInput('')
     setOutput('')
+    setConfidence(0)
   }
 
   const handlePreset = (preset: typeof presets[0]) => {
-    setSourceLang(preset.source)
-    setTargetLang(preset.target)
+    setSourceLang(preset.source as Language)
+    setTargetLang(preset.target as Language)
+  }
+
+  const getConfidenceLabel = () => {
+    if (confidence >= 100) return { text: 'Exact Match', color: 'text-green-600' }
+    if (confidence >= 70) return { text: 'High Confidence', color: 'text-blue-600' }
+    if (confidence >= 40) return { text: 'Medium Confidence', color: 'text-yellow-600' }
+    return { text: 'Low Match', color: 'text-orange-600' }
   }
 
   return (
@@ -131,15 +98,15 @@ export default function TranslatePage() {
 
       <Page className="flex-1">
         <div className="lg:hidden fixed top-0 right-0 z-50 p-4">
-          <Button variant="secondary" size="sm" onClick={() => setShowDocsMobile(!showDocsMobile)}>
-            {showDocsMobile ? <X className="w-4 h-4" /> : <HelpCircle className="w-4 h-4" />}
+          <Button variant="secondary" size="sm" onClick={() => setShowDocs(!showDocs)}>
+            {showDocs ? <X className="w-4 h-4" /> : <HelpCircle className="w-4 h-4" />}
           </Button>
         </div>
 
         <div className="p-4 lg:p-8">
           <Header
             title="Translation"
-            subtitle="Translate text between 50+ languages"
+            subtitle="Dictionary-based phrase and word translation"
             className="mb-6"
           />
 
@@ -147,7 +114,7 @@ export default function TranslatePage() {
             {/* Main Content */}
             <div className={cn(
               "space-y-6",
-              showDocs || showDocsMobile ? "xl:col-span-2" : "xl:col-span-3"
+              showDocs ? "xl:col-span-2" : "xl:col-span-3"
             )}>
               <Card variant="paper" padding="md">
                 <CardContent className="p-4 lg:p-6">
@@ -189,9 +156,9 @@ export default function TranslatePage() {
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-medium text-ink-black">Source</label>
                         <Select
-                          options={languages}
+                          options={languages.map(l => ({ value: l.code, label: l.name }))}
                           value={sourceLang}
-                          onChange={(v) => setSourceLang(v)}
+                          onChange={(v) => setSourceLang(v as Language)}
                           className="w-36"
                         />
                       </div>
@@ -208,9 +175,9 @@ export default function TranslatePage() {
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-medium text-ink-black">Target</label>
                         <Select
-                          options={languages}
+                          options={languages.map(l => ({ value: l.code, label: l.name }))}
                           value={targetLang}
-                          onChange={(v) => setTargetLang(v)}
+                          onChange={(v) => setTargetLang(v as Language)}
                           className="w-36"
                         />
                       </div>
@@ -237,7 +204,7 @@ export default function TranslatePage() {
                   </div>
 
                   <div className="flex flex-wrap gap-3 mt-6">
-                    <Button onClick={handleTranslate} isLoading={isProcessing} disabled={!input.trim()}>
+                    <Button onClick={handleTranslate} disabled={!input.trim()}>
                       <Languages className="w-4 h-4 mr-2" />
                       Translate
                     </Button>
@@ -246,33 +213,45 @@ export default function TranslatePage() {
                       Clear
                     </Button>
                   </div>
+
+                  {output && confidence > 0 && (
+                    <div className={cn("mt-4 flex items-center gap-2 text-sm", getConfidenceLabel().color)}>
+                      <Info className="w-4 h-4" />
+                      <span>{getConfidenceLabel().text}</span>
+                      <span className="text-ink-gray">({confidence}% match)</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
 
             {/* Documentation Panel */}
-            {(showDocs || showDocsMobile) && (
+            {showDocs && (
               <div className="space-y-6">
                 <Card variant="ink" padding="md">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Lightbulb className="w-5 h-5" />
-                      Tips
+                      How It Works
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm text-ink-light">
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Use simple, clear sentences for better accuracy</span>
+                        <span>Uses built-in dictionary of common phrases</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Specialized terms may need manual review</span>
+                        <span>Translates word-by-word when no phrase match</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Click Swap to reverse translation direction</span>
+                        <span>No internet required - works offline</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-ink-gray">•</span>
+                        <span>Grammar not included - may need editing</span>
                       </li>
                     </ul>
                   </CardContent>
@@ -308,18 +287,39 @@ export default function TranslatePage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-ink-gray mb-4">
-                      Supports 25+ languages including:
+                      Supports 11 languages:
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {languages.slice(0, 8).map((lang) => (
-                        <span key={lang.value} className="px-2 py-1 text-xs bg-ink-light/10 rounded-full text-ink-gray">
-                          {lang.label}
+                      {languages.map((lang) => (
+                        <span key={lang.code} className="px-2 py-1 text-xs bg-ink-light/10 rounded-full text-ink-gray">
+                          {lang.nativeName}
                         </span>
                       ))}
-                      <span className="px-2 py-1 text-xs bg-ink-light/10 rounded-full text-ink-gray">
-                        + 17 more
-                      </span>
                     </div>
+                  </CardContent>
+                </Card>
+
+                <Card variant="paper" padding="md">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      Limitations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 text-sm text-ink-gray">
+                      <li className="flex items-start gap-2">
+                        <span className="text-ink-gray">•</span>
+                        <span>No grammar or conjugation</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-ink-gray">•</span>
+                        <span>No context awareness</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-ink-gray">•</span>
+                        <span>Best for simple phrases</span>
+                      </li>
+                    </ul>
                   </CardContent>
                 </Card>
               </div>
