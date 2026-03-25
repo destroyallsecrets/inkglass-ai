@@ -52,7 +52,7 @@ interface PageProps {
 
 export function Page({ children, className }: PageProps) {
   return (
-    <main className={cn('min-h-screen bg-ink-paper paper-texture pt-14 pb-20 lg:pt-0 lg:pb-0', className)}>
+    <main className={cn('min-h-screen bg-ink-paper paper-texture pt-14 lg:pt-0', className)}>
       {children}
     </main>
   )
