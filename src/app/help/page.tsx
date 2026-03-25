@@ -23,6 +23,8 @@ import {
   Video,
   MessageCircle,
   Code,
+  Globe,
+  Link2,
 } from 'lucide-react'
 
 const faqs = [
@@ -91,6 +93,21 @@ const contactOptions = [
     title: 'Live Chat',
     description: 'Available 24/7',
     action: 'Start Chat',
+  },
+]
+
+const projectLinks = [
+  {
+    icon: <Globe className="w-5 h-5" />,
+    title: 'Live Demo',
+    description: 'inkglass-ai.vercel.app',
+    href: 'https://inkglass-ai.vercel.app',
+  },
+  {
+    icon: <Link2 className="w-5 h-5" />,
+    title: 'Source Code',
+    description: 'github.com/destroyallsecrets/inkglass-ai',
+    href: 'https://github.com/destroyallsecrets/inkglass-ai',
   },
 ]
 
@@ -196,6 +213,37 @@ export default function HelpPage() {
                             {option.action}
                           </Button>
                         </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card variant="paper" padding="md">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <ExternalLink className="w-5 h-5" />
+                      Project Links
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {projectLinks.map((link, index) => (
+                        <a
+                          key={index}
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-4 p-4 rounded-lg bg-ink-light/10 hover:bg-ink-light/20 transition-colors"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-ink-black flex items-center justify-center text-ink-paper">
+                            {link.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium">{link.title}</div>
+                            <div className="text-sm text-ink-gray truncate">{link.description}</div>
+                          </div>
+                          <ExternalLink className="w-4 h-4 text-ink-gray flex-shrink-0" />
+                        </a>
                       ))}
                     </div>
                   </CardContent>
