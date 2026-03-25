@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InkGlass AI - Feature Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, h3 { font-family: 'Fraunces', serif; }
+    .slide { display: none; animation: fadeIn 0.5s ease; }
+    .slide.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .glow { box-shadow: 0 0 60px rgba(0,0,0,0.15); }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .progress-bar { transition: width 0.3s ease; }
+    .typing { overflow: hidden; border-right: 2px solid #1A1A1A; white-space: nowrap; animation: typing 2s steps(40, end), blink-caret 0.75s step-end infinite; }
+    @keyframes typing { from { width: 0 } to { width: 100% } }
+    @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #1A1A1A } }
+  </style>
+</head>
+<body class="bg-[#F5F0E8] min-h-screen">
+  
+  <!-- Intro Slide -->
+  <div id="slide-0" class="slide active min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-b from-[#F5F0E8] to-white">
+    <div class="text-center max-w-3xl">
+      <div class="w-20 h-20 bg-[#1A1A1A] rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-xl">
+        <svg class="w-10 h-10 text-[#F5F0E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+        </svg>
+      </div>
+      <h1 class="text-5xl md:text-7xl font-bold text-[#1A1A1A] mb-6 tracking-tight">InkGlass AI</h1>
+      <p class="text-xl text-[#666] mb-8 max-w-xl mx-auto">Modern AI-powered tools with a beautiful glassmorphism design. No AI APIs required.</p>
+      <div class="flex gap-4 justify-center mb-12">
+        <a href="https://inkglass-ai.vercel.app" target="_blank" class="px-6 py-3 bg-[#1A1A1A] text-white rounded-lg font-medium hover:bg-[#333] transition-colors">
+          Try Live Demo →
+        </a>
+        <a href="https://github.com/destroyallsecrets/inkglass-ai" target="_blank" class="px-6 py-3 border-2 border-[#1A1A1A] text-[#1A1A1A] rounded-lg font-medium hover:bg-[#1A1A1A] hover:text-white transition-colors">
+          View Source
+        </a>
+      </div>
+      <p class="text-sm text-[#999]">Press <kbd class="px-2 py-1 bg-[#e0e0e0] rounded">→</kbd> or click Next to continue</p>
+    </div>
+  </div>
+
+  <!-- Features Overview -->
+  <div id="slide-1" class="slide min-h-screen flex-col items-center justify-center p-8">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-4xl md:text-5xl font-bold text-[#1A1A1A] mb-2 text-center">Powerful Tools</h2>
+      <p class="text-[#666] text-center mb-12">Everything you need, nothing you don't</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="feature-card bg-white p-6 rounded-xl border border-[#e0e0e0] transition-all duration-300 cursor-pointer">
+          <div class="w-12 h-12 bg-[#fef3c7] rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-[#d97706]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-[#1A1A1A] mb-2">Chat</h3>
+          <p class="text-sm text-[#666]">Conversational AI with context awareness and template responses</p>
+        </div>
+
+        <div class="feature-card bg-white p-6 rounded-xl border border-[#e0e0e0] transition-all duration-300 cursor-pointer">
+          <div class="w-12 h-12 bg-[#dbeafe] rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-[#2563eb]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-[#1A1A1A] mb-2">Code Generation</h3>
+          <p class="text-sm text-[#666]">Template-based code for React, TypeScript, Python, Go, Rust</p>
+        </div>
+
+        <div class="feature-card bg-white p-6 rounded-xl border border-[#e0e0e0] transition-all duration-300 cursor-pointer">
+          <div class="w-12 h-12 bg-[#dcfce7] rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-[#16a34a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-[#1A1A1A] mb-2">Data Analysis</h3>
+          <p class="text-sm text-[#666]">CSV/JSON parsing, statistics, regression, forecasting</p>
+        </div>
+
+        <div class="feature-card bg-white p-6 rounded-xl border border-[#e0e0e0] transition-all duration-300 cursor-pointer">
+          <div class="w-12 h-12 bg-[#fce7f3] rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-[#db2777]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-[#1A1A1A] mb-2">Image Analysis</h3>
+          <p class="text-sm text-[#666]">Color palette, brightness, contrast extraction</p>
+        </div>
+
+        <div class="feature-card bg-white p-6 rounded-xl border border-[#e0e0e0] transition-all duration-300 cursor-pointer">
+          <div class="w-12 h-12 bg-[#e0e7ff] rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-[#4f46e5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-[#1A1A1A] mb-2">Translation</h3>
+          <p class="text-sm text-[#666]">11 languages with phrase and word translation</p>
+        </div>
+
+        <div class="feature-card bg-white p-6 rounded-xl border border-[#e0e0e0] transition-all duration-300 cursor-pointer">
+          <div class="w-12 h-12 bg-[#fef3c7] rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-[#ca8a04]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-[#1A1A1A] mb-2">Writing Assistant</h3>
+          <p class="text-sm text-[#666]">Emails, letters, reports, proposals with tone control</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Code Analysis Demo -->
+  <div id="slide-2" class="slide min-h-screen flex-col items-center justify-center p-8">
+    <div class="max-w-5xl mx-auto">
+      <span class="text-xs uppercase tracking-widest text-[#999] mb-2 block">Developer Tools</span>
+      <h2 class="text-4xl md:text-5xl font-bold text-[#1A1A1A] mb-2">Code Analysis</h2>
+      <p class="text-[#666] mb-8">Static code analysis without AI - uses pattern matching</p>
+      
+      <div class="bg-white rounded-2xl border border-[#e0e0e0] overflow-hidden glow">
+        <div class="flex items-center gap-2 px-4 py-3 bg-[#f5f5f5] border-b border-[#e0e0e0]">
+          <div class="w-3 h-3 rounded-full bg-[#ef4444]"></div>
+          <div class="w-3 h-3 rounded-full bg-[#f59e0b]"></div>
+          <div class="w-3 h-3 rounded-full bg-[#22c55e]"></div>
+          <span class="ml-4 text-sm text-[#666]">Code Analysis</span>
+        </div>
+        <div class="grid md:grid-cols-2">
+          <div class="p-6 border-r border-[#e0e0e0]">
+            <h4 class="text-sm font-semibold text-[#1A1A1A] mb-4">Input Code</h4>
+            <pre class="text-xs bg-[#fafafa] p-4 rounded-lg overflow-x-auto font-mono text-[#333]"><code>const apiKey = 'sk-12345';
+
+function process(items) {
+  let total = 0;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].price > 0) {
+      total += items[i].price;
+    }
+  }
+  return total;
+}</code></pre>
+          </div>
+          <div class="p-6">
+            <h4 class="text-sm font-semibold text-[#1A1A1A] mb-4">Analysis Results</h4>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-[#666]">Complexity</span>
+                <span class="px-2 py-1 bg-[#fef3c7] text-[#92400e] rounded text-sm font-medium">Medium (5)</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-[#666]">Grade</span>
+                <span class="px-2 py-1 bg-[#dbeafe] text-[#1e40af] rounded text-sm font-medium">Grade B</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-[#666]">Maintainability</span>
+                <span class="px-2 py-1 bg-[#dcfce7] text-[#166534] rounded text-sm font-medium">72/100</span>
+              </div>
+              <div class="pt-4 border-t border-[#e0e0e0]">
+                <div class="flex items-start gap-2">
+                  <svg class="w-5 h-5 text-[#dc2626] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-[#1A1A1A]">Security Issue Found</p>
+                    <p class="text-xs text-[#666]">Hardcoded API key detected</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Analysis Demo -->
+  <div id="slide-3" class="slide min-h-screen flex-col items-center justify-center p-8">
+    <div class="max-w-5xl mx-auto">
+      <span class="text-xs uppercase tracking-widest text-[#999] mb-2 block">Content Tools</span>
+      <h2 class="text-4xl md:text-5xl font-bold text-[#1A1A1A] mb-2">Text Analysis</h2>
+      <p class="text-[#666] mb-8">Readability, sentiment, keywords, and summarization</p>
+      
+      <div class="bg-white rounded-2xl border border-[#e0e0e0] overflow-hidden glow">
+        <div class="p-6 border-b border-[#e0e0e0]">
+          <h4 class="text-sm font-semibold text-[#1A1A1A] mb-4">Sample Analysis</h4>
+          <p class="text-sm text-[#666] leading-relaxed mb-6">"Writing clear content is essential for effective communication. Good readability scores indicate your text can be easily understood by your target audience."</p>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="text-center p-4 bg-[#fafafa] rounded-lg">
+              <div class="text-2xl font-bold text-[#1A1A1A]">8.2</div>
+              <div class="text-xs text-[#666]">Grade Level</div>
+            </div>
+            <div class="text-center p-4 bg-[#fafafa] rounded-lg">
+              <div class="text-2xl font-bold text-[#1A1A1A]">62</div>
+              <div class="text-xs text-[#666]">Reading Ease</div>
+            </div>
+            <div class="text-center p-4 bg-[#fafafa] rounded-lg">
+              <div class="text-2xl font-bold text-[#22c55e]">+0.8</div>
+              <div class="text-xs text-[#666]">Sentiment</div>
+            </div>
+            <div class="text-center p-4 bg-[#fafafa] rounded-lg">
+              <div class="text-2xl font-bold text-[#1A1A1A]">5</div>
+              <div class="text-xs text-[#666]">Key Topics</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-6 bg-[#fafafa]">
+          <h4 class="text-sm font-semibold text-[#1A1A1A] mb-3">Key Topics</h4>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-[#1A1A1A] text-white rounded-full text-sm">Communication</span>
+            <span class="px-3 py-1 bg-[#333] text-white rounded-full text-sm">Readability</span>
+            <span class="px-3 py-1 bg-[#666] text-white rounded-full text-sm">Audience</span>
+            <span class="px-3 py-1 bg-[#999] text-white rounded-full text-sm">Understanding</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Utilities Demo -->
+  <div id="slide-4" class="slide min-h-screen flex-col items-center justify-center p-8">
+    <div class="max-w-5xl mx-auto">
+      <span class="text-xs uppercase tracking-widest text-[#999] mb-2 block">Developer Utilities</span>
+      <h2 class="text-4xl md:text-5xl font-bold text-[#1A1A1A] mb-2">Handy Tools</h2>
+      <p class="text-[#666] mb-8">Password generator, color tools, regex tester, JSON formatter</p>
+      
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-xl border border-[#e0e0e0]">
+          <h4 class="font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#ca8a04]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+            Password Generator
+          </h4>
+          <div class="bg-[#fafafa] p-4 rounded-lg mb-4">
+            <code class="text-sm font-mono text-[#333] break-all">Kj8#mNp2$vL5@qR9</code>
+          </div>
+          <div class="h-2 bg-[#e0e0e0] rounded-full overflow-hidden">
+            <div class="h-full bg-[#22c55e] rounded-full" style="width: 87%"></div>
+          </div>
+          <p class="text-xs text-[#666] mt-2">Very Strong (8/8)</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-[#e0e0e0]">
+          <h4 class="font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#2563eb]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+            </svg>
+            Color Tools
+          </h4>
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-lg shadow-inner" style="background-color: #3B82F6"></div>
+            <div class="flex-1">
+              <p class="text-sm font-mono text-[#333]">#3B82F6</p>
+              <p class="text-xs text-[#666]">RGB: 59, 130, 246</p>
+              <p class="text-xs text-[#666]">HSL: 217°, 91°, 60°</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-[#e0e0e0]">
+          <h4 class="font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#16a34a]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+            </svg>
+            Regex Tester
+          </h4>
+          <div class="bg-[#fafafa] p-4 rounded-lg">
+            <p class="text-sm font-mono text-[#333]"><span class="text-[#dc2626]">/</span><span class="text-[#059669]">[a-zA-Z0-9._%+-]+</span><span class="text-[#dc2626]">@</span><span class="text-[#059669]">[a-zA-Z0-9.-]+</span><span class="text-[#dc2626]">/</span><span class="text-[#2563eb]">g</span></p>
+          </div>
+          <p class="text-xs text-[#666] mt-2">Email pattern - 2 matches found</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-[#e0e0e0]">
+          <h4 class="font-semibold text-[#1A1A1A] mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-[#db2777]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+            </svg>
+            JSON Tools
+          </h4>
+          <div class="bg-[#fafafa] p-4 rounded-lg">
+            <pre class="text-xs font-mono text-[#333] overflow-x-auto">{<br>  "name": "InkGlass",<br>  "version": "1.0",<br>  "features": 12<br>}</pre>
+          </div>
+          <p class="text-xs text-[#666] mt-2">Formatted JSON • 4 keys</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Analysis Demo -->
+  <div id="slide-5" class="slide min-h-screen flex-col items-center justify-center p-8">
+    <div class="max-w-5xl mx-auto">
+      <span class="text-xs uppercase tracking-widest text-[#999] mb-2 block">Analytics</span>
+      <h2 class="text-4xl md:text-5xl font-bold text-[#1A1A1A] mb-2">Data Analysis</h2>
+      <p class="text-[#666] mb-8">Regression, forecasting, correlation, and more</p>
+      
+      <div class="bg-white rounded-2xl border border-[#e0e0e0] overflow-hidden glow">
+        <div class="p-6 border-b border-[#e0e0e0]">
+          <div class="flex items-center justify-between mb-6">
+            <h4 class="font-semibold text-[#1A1A1A]">Monthly Revenue Trend</h4>
+            <span class="px-3 py-1 bg-[#dcfce7] text-[#166534] rounded-full text-sm">+12.5% growth</span>
+          </div>
+          <div class="flex items-end gap-2 h-48">
+            <div class="flex-1 bg-[#1A1A1A] rounded-t transition-all hover:bg-[#333]" style="height: 45%"></div>
+            <div class="flex-1 bg-[#1A1A1A] rounded-t transition-all hover:bg-[#333]" style="height: 52%"></div>
+            <div class="flex-1 bg-[#1A1A1A] rounded-t transition-all hover:bg-[#333]" style="height: 48%"></div>
+            <div class="flex-1 bg-[#1A1A1A] rounded-t transition-all hover:bg-[#333]" style="height: 61%"></div>
+            <div class="flex-1 bg-[#1A1A1A] rounded-t transition-all hover:bg-[#333]" style="height: 55%"></div>
+            <div class="flex-1 bg-[#1A1A1A] rounded-t transition-all hover:bg-[#333]" style="height: 70%"></div>
+            <div class="flex-1 bg-[#1A1A1A] rounded-t transition-all hover:bg-[#333]" style="height: 78%"></div>
+            <div class="flex-1 bg-[#1A1A1A] rounded-t transition-all hover:bg-[#333]" style="height: 85%"></div>
+            <div class="flex-1 bg-[#1A1A1A] rounded-t transition-all hover:bg-[#333]" style="height: 82%"></div>
+            <div class="flex-1 bg-[#dc2626] rounded-t" style="height: 92%"></div>
+          </div>
+          <div class="flex justify-between mt-2 text-xs text-[#999]">
+            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#e0e0e0]">
+          <div class="p-4 text-center">
+            <div class="text-2xl font-bold text-[#1A1A1A]">0.94</div>
+            <div class="text-xs text-[#666]">R-Squared</div>
+          </div>
+          <div class="p-4 text-center">
+            <div class="text-2xl font-bold text-[#1A1A1A]">Strong</div>
+            <div class="text-xs text-[#666]">Correlation</div>
+          </div>
+          <div class="p-4 text-center">
+            <div class="text-2xl font-bold text-[#1A1A1A]">Upward</div>
+            <div class="text-xs text-[#666]">Trend</div>
+          </div>
+          <div class="p-4 text-center">
+            <div class="text-2xl font-bold text-[#22c55e]">+18%</div>
+            <div class="text-xs text-[#666]">Forecast</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Design Demo -->
+  <div id="slide-6" class="slide min-h-screen flex-col items-center justify-center p-8">
+    <div class="max-w-5xl mx-auto text-center">
+      <span class="text-xs uppercase tracking-widest text-[#999] mb-2 block">Beautiful Design</span>
+      <h2 class="text-4xl md:text-5xl font-bold text-[#1A1A1A] mb-2">Glassmorphism + E-Ink</h2>
+      <p class="text-[#666] mb-12 max-w-xl mx-auto">A unique aesthetic combining modern glass effects with classic print typography</p>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-white/60 backdrop-blur-lg p-8 rounded-2xl border border-white/50 shadow-xl">
+          <h3 class="text-xl font-serif font-semibold text-[#1A1A1A] mb-2">Glass Card</h3>
+          <p class="text-sm text-[#666]">Frosted glass effect with subtle shadows and borders</p>
+        </div>
+        
+        <div class="bg-[#F5F0E8] p-8 rounded-2xl border-2 border-[#1A1A1A] shadow-lg">
+          <h3 class="text-xl font-serif font-semibold text-[#1A1A1A] mb-2">Paper Card</h3>
+          <p class="text-sm text-[#666]">Classic print aesthetic with high contrast</p>
+        </div>
+        
+        <div class="bg-[#1A1A1A] p-8 rounded-2xl shadow-xl">
+          <h3 class="text-xl font-serif font-semibold text-[#F5F0E8] mb-2">Ink Card</h3>
+          <p class="text-sm text-[#999]">Dark mode variant with inverted colors</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Outro -->
+  <div id="slide-7" class="slide min-h-screen flex-col items-center justify-center p-8">
+    <div class="text-center max-w-2xl">
+      <h2 class="text-4xl md:text-5xl font-bold text-[#1A1A1A] mb-6">Ready to Explore?</h2>
+      <p class="text-xl text-[#666] mb-8">Try all the features live. No signup required.</p>
+      
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <a href="https://inkglass-ai.vercel.app" target="_blank" class="px-8 py-4 bg-[#1A1A1A] text-white rounded-xl font-semibold hover:bg-[#333] transition-colors text-lg">
+          Launch App →
+        </a>
+        <a href="https://github.com/destroyallsecrets/inkglass-ai" target="_blank" class="px-8 py-4 border-2 border-[#1A1A1A] text-[#1A1A1A] rounded-xl font-semibold hover:bg-[#1A1A1A] hover:text-white transition-colors text-lg">
+          View on GitHub
+        </a>
+      </div>
+      
+      <div class="flex justify-center gap-8 text-sm text-[#999]">
+        <span>23 Pages</span>
+        <span>•</span>
+        <span>10+ Tools</span>
+        <span>•</span>
+        <span>No AI APIs</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t border-[#e0e0e0] p-4">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <span id="slide-counter" class="text-sm font-medium text-[#333]">1 / 8</span>
+        <div class="w-32 h-2 bg-[#e0e0e0] rounded-full overflow-hidden">
+          <div id="progress-bar" class="h-full bg-[#1A1A1A] progress-bar" style="width: 12.5%"></div>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="prevSlide()" class="px-4 py-2 border border-[#e0e0e0] rounded-lg hover:bg-[#f5f5f5] transition-colors disabled:opacity-50" id="prev-btn">
+          ← Previous
+        </button>
+        <button onclick="nextSlide()" class="px-4 py-2 bg-[#1A1A1A] text-white rounded-lg hover:bg-[#333] transition-colors" id="next-btn">
+          Next →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const totalSlides = 8;
+
+    function showSlide(n) {
+      const slides = document.querySelectorAll('.slide');
+      slides.forEach(slide => slide.classList.remove('active'));
+      slides[n].classList.add('active');
+      
+      document.getElementById('slide-counter').textContent = `${n + 1} / ${totalSlides}`;
+      document.getElementById('progress-bar').style.width = `${((n + 1) / totalSlides) * 100}%`;
+      
+      document.getElementById('prev-btn').disabled = n === 0;
+      document.getElementById('next-btn').disabled = n === totalSlides - 1;
+      
+      if (n === totalSlides - 1) {
+        document.getElementById('next-btn').textContent = 'Done ✓';
+      } else {
+        document.getElementById('next-btn').textContent = 'Next →';
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        showSlide(currentSlide);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        showSlide(currentSlide);
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      }
+    });
+
+    showSlide(0);
+  </script>
+</body>
+</html>
