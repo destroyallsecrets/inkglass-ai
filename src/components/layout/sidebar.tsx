@@ -26,6 +26,9 @@ import {
   Sparkles,
   Menu,
   X,
+  Wrench,
+  FileSearch,
+  Palette,
 } from 'lucide-react'
 import { IconButton } from '@/components/ui/button'
 
@@ -45,11 +48,14 @@ const mainNavItems: NavItem[] = [
   { id: 'home', icon: <Home className="w-5 h-5" />, label: 'Dashboard', href: '/' },
   { id: 'chat', icon: <MessageSquare className="w-5 h-5" />, label: 'Chat', href: '/chat' },
   { id: 'code', icon: <Code className="w-5 h-5" />, label: 'Code', href: '/code' },
+  { id: 'code-analysis', icon: <FileSearch className="w-5 h-5" />, label: 'Code Analysis', href: '/tools/code-analysis' },
+  { id: 'text-analysis', icon: <FileText className="w-5 h-5" />, label: 'Text Analysis', href: '/tools/text-analysis' },
   { id: 'documents', icon: <FileText className="w-5 h-5" />, label: 'Documents', href: '/documents' },
   { id: 'images', icon: <Image className="w-5 h-5" />, label: 'Images', href: '/images' },
   { id: 'translate', icon: <Languages className="w-5 h-5" />, label: 'Translate', href: '/translate' },
   { id: 'write', icon: <PenTool className="w-5 h-5" />, label: 'Write', href: '/write' },
   { id: 'analyze', icon: <BarChart3 className="w-5 h-5" />, label: 'Analyze', href: '/analyze' },
+  { id: 'utilities', icon: <Wrench className="w-5 h-5" />, label: 'Utilities', href: '/tools/utilities' },
 ]
 
 const managementNavItems: NavItem[] = [

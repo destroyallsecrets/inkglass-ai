@@ -14,29 +14,37 @@ interface Tab {
 interface TabsProps {
   tabs: Tab[]
   defaultTab?: string
+  activeTab?: string
   onChange?: (tabId: string) => void
+  onTabChange?: (tabId: string) => void
   className?: string
 }
 
-export function Tabs({ tabs, defaultTab, onChange, className }: TabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id)
+export function Tabs({ tabs, defaultTab, activeTab: controlledActiveTab, onChange, onTabChange, className }: TabsProps) {
+  const [internalActiveTab, setInternalActiveTab] = useState(defaultTab || tabs[0]?.id)
+  
+  const isControlled = controlledActiveTab !== undefined
+  const activeTab = isControlled ? controlledActiveTab : internalActiveTab
   
   const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId)
+    if (!isControlled) {
+      setInternalActiveTab(tabId)
+    }
     onChange?.(tabId)
+    onTabChange?.(tabId)
   }
 
   const activeIndex = tabs.findIndex((t) => t.id === activeTab)
 
   return (
     <div className={cn('w-full', className)}>
-      <div className="relative flex border-b border-ink-light/30">
+      <div className="relative flex border-b border-ink-light/30 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
             className={cn(
-              'relative px-4 py-3 text-sm font-medium transition-colors duration-200',
+              'relative px-4 py-3 text-sm font-medium transition-colors duration-200 whitespace-nowrap',
               'focus:outline-none',
               activeTab === tab.id
                 ? 'text-ink-black'
