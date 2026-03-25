@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Sidebar } from '@/components/layout'
 import { Container } from '@/components/layout'
 import { Header, Page, Section } from '@/components/layout'
@@ -11,7 +11,6 @@ import {
   CardTitle,
   CardContent,
   Alert,
-  Tabs,
 } from '@/components/ui'
 import { Select } from '@/components/forms'
 import {
@@ -21,74 +20,60 @@ import {
   Check,
   RefreshCw,
   Save,
-  ChevronDown,
   HelpCircle,
   Lightbulb,
   Keyboard,
   BookOpen,
-  Sparkles,
   FileCode,
+  Download,
+  ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  generateCode,
+  templateOptions,
+  languageOptions,
+  getAvailableTemplates,
+  type TemplateType,
+  type Language,
+  type TemplateContext,
+} from '@/lib/code-templates'
 
-const languages = [
-  { value: 'javascript', label: 'JavaScript' },
-  { value: 'typescript', label: 'TypeScript' },
-  { value: 'python', label: 'Python' },
-  { value: 'go', label: 'Go' },
-  { value: 'rust', label: 'Rust' },
-  { value: 'java', label: 'Java' },
-  { value: 'cpp', label: 'C++' },
-  { value: 'csharp', label: 'C#' },
-  { value: 'php', label: 'PHP' },
-  { value: 'ruby', label: 'Ruby' },
-  { value: 'swift', label: 'Swift' },
-  { value: 'kotlin', label: 'Kotlin' },
-]
-
-const actions = [
-  { value: 'write', label: 'Write Code' },
-  { value: 'debug', label: 'Debug' },
-  { value: 'explain', label: 'Explain' },
-  { value: 'optimize', label: 'Optimize' },
-  { value: 'review', label: 'Review' },
-  { value: 'convert', label: 'Convert' },
-]
-
-const frameworks = [
-  { value: 'none', label: 'None' },
-  { value: 'react', label: 'React' },
-  { value: 'vue', label: 'Vue' },
-  { value: 'angular', label: 'Angular' },
-  { value: 'nextjs', label: 'Next.js' },
-  { value: 'express', label: 'Express' },
-  { value: 'django', label: 'Django' },
-  { value: 'flask', label: 'Flask' },
-  { value: 'fastapi', label: 'FastAPI' },
-  { value: 'laravel', label: 'Laravel' },
-]
+const templateTypes = Object.entries(templateOptions).map(([value, data]) => ({
+  value,
+  label: data.label,
+  description: data.description,
+}))
 
 export default function CodePage() {
-  const [input, setInput] = useState('')
+  const [language, setLanguage] = useState<Language>('typescript')
+  const [templateType, setTemplateType] = useState<TemplateType>('function')
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [props, setProps] = useState('')
+  const [methods, setMethods] = useState('')
   const [output, setOutput] = useState('')
-  const [language, setLanguage] = useState('javascript')
-  const [action, setAction] = useState('write')
-  const [framework, setFramework] = useState('none')
-  const [isProcessing, setIsProcessing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [showDocs, setShowDocs] = useState(true)
+  const [generated, setGenerated] = useState(false)
 
-  const handleProcess = async () => {
-    if (!input.trim()) return
-    setIsProcessing(true)
+  const availableTemplates = useMemo(() => {
+    return templateTypes.filter(t => getAvailableTemplates(language).includes(t.value as TemplateType))
+  }, [language])
+
+  const handleGenerate = () => {
+    if (!name.trim()) return
     
-    setTimeout(() => {
-      const response = `// ${action === 'write' ? 'Generated Code' : action === 'debug' ? 'Debug Analysis' : action === 'explain' ? 'Code Explanation' : action === 'optimize' ? 'Optimized Code' : 'Code Review'}
-
-${getSimulatedCode(language, action, framework, input)}`
-      setOutput(response)
-      setIsProcessing(false)
-    }, 1500)
+    const context: TemplateContext = {
+      name: name.trim(),
+      description: description.trim() || undefined,
+      props: props.trim() ? props.split(',').map(p => p.trim()).filter(Boolean) : undefined,
+      methods: methods.trim() ? methods.split(',').map(m => m.trim()).filter(Boolean) : undefined,
+    }
+    
+    const code = generateCode(templateType, language, context)
+    setOutput(code)
+    setGenerated(true)
   }
 
   const handleCopy = async () => {
@@ -97,23 +82,37 @@ ${getSimulatedCode(language, action, framework, input)}`
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleDownload = () => {
+    const extension = languageOptions[language].extensions
+    const filename = `${name.toLowerCase().replace(/\s+/g, '-')}.${extension}`
+    const blob = new Blob([output], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const handleReset = () => {
-    setInput('')
+    setName('')
+    setDescription('')
+    setProps('')
+    setMethods('')
     setOutput('')
+    setGenerated(false)
   }
 
   const keyboardShortcuts = [
-    { keys: ['Ctrl', 'Enter'], action: 'Submit code' },
+    { keys: ['Ctrl', 'Enter'], action: 'Generate code' },
     { keys: ['Ctrl', 'Shift', 'C'], action: 'Copy output' },
-    { keys: ['Ctrl', 'N'], action: 'New session' },
     { keys: ['Ctrl', '/'], action: 'Toggle docs' },
   ]
 
   const tips = [
-    'Be specific about what you want the code to do',
-    'Include the framework name for better results',
-    'Mention any specific requirements or constraints',
-    'For debugging, paste the error message',
+    'Use PascalCase for component/class names',
+    'Separate multiple props/methods with commas',
+    'Check the docs panel for available templates',
   ]
 
   return (
@@ -124,7 +123,7 @@ ${getSimulatedCode(language, action, framework, input)}`
         <Container>
           <Header
             title="Code Generation"
-            subtitle="Write, debug, and explain code with AI"
+            subtitle="Generate boilerplate code from templates"
             actions={
               <Button variant="secondary" onClick={() => setShowDocs(!showDocs)}>
                 <HelpCircle className="w-4 h-4 mr-2" />
@@ -143,52 +142,89 @@ ${getSimulatedCode(language, action, framework, input)}`
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <Select
                       label="Language"
-                      options={languages}
+                      options={Object.entries(languageOptions).map(([value, data]) => ({
+                        value,
+                        label: data.label,
+                      }))}
                       value={language}
-                      onChange={(v) => setLanguage(v)}
+                      onChange={(v) => setLanguage(v as Language)}
                     />
                     <Select
-                      label="Action"
-                      options={actions}
-                      value={action}
-                      onChange={(v) => setAction(v)}
-                    />
-                    <Select
-                      label="Framework"
-                      options={frameworks}
-                      value={framework}
-                      onChange={(v) => setFramework(v)}
+                      label="Template Type"
+                      options={availableTemplates.map(t => ({
+                        value: t.value,
+                        label: t.label,
+                      }))}
+                      value={templateType}
+                      onChange={(v) => setTemplateType(v as TemplateType)}
                     />
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-ink-black mb-2">
-                        {action === 'write' ? 'Describe what you want to build' : 
-                         action === 'debug' ? 'Paste your code with errors' :
-                         action === 'explain' ? 'Paste code to explain' :
-                         action === 'optimize' ? 'Paste code to optimize' :
-                         action === 'review' ? 'Paste code to review' : 'Code'}
+                        Name *
                       </label>
-                      <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder={getPlaceholder(action)}
-                        className="w-full h-48 px-4 py-3 bg-ink-cream/50 border border-ink-light/30 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30 focus:border-ink-medium resize-none"
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g., UserProfile, fetchData, ApiController"
+                        className="w-full px-4 py-3 bg-ink-cream/50 border border-ink-light/30 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30 focus:border-ink-medium"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-ink-black mb-2">
+                        Description (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Brief description of what this code does"
+                        className="w-full px-4 py-3 bg-ink-cream/50 border border-ink-light/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30 focus:border-ink-medium"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-ink-black mb-2">
+                          Props/Parameters (comma-separated)
+                        </label>
+                        <input
+                          type="text"
+                          value={props}
+                          onChange={(e) => setProps(e.target.value)}
+                          placeholder="e.g., userId, name, email"
+                          className="w-full px-4 py-3 bg-ink-cream/50 border border-ink-light/30 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30 focus:border-ink-medium"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-ink-black mb-2">
+                          Methods (comma-separated)
+                        </label>
+                        <input
+                          type="text"
+                          value={methods}
+                          onChange={(e) => setMethods(e.target.value)}
+                          placeholder="e.g., validate, save, delete"
+                          className="w-full px-4 py-3 bg-ink-cream/50 border border-ink-light/30 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30 focus:border-ink-medium"
+                        />
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 mt-6">
-                    <Button onClick={handleProcess} isLoading={isProcessing} disabled={!input.trim()}>
+                    <Button 
+                      onClick={handleGenerate} 
+                      disabled={!name.trim()}
+                    >
                       <Play className="w-4 h-4 mr-2" />
-                      {action === 'write' ? 'Generate' : 
-                       action === 'debug' ? 'Debug' :
-                       action === 'explain' ? 'Explain' :
-                       action === 'optimize' ? 'Optimize' : 'Review'}
+                      Generate Code
                     </Button>
                     <Button variant="ghost" onClick={handleReset}>
                       <RefreshCw className="w-4 h-4 mr-2" />
@@ -204,16 +240,20 @@ ${getSimulatedCode(language, action, framework, input)}`
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
                         <Code className="w-5 h-5" />
-                        Output
+                        Generated Code
                       </CardTitle>
                       <div className="flex items-center gap-2">
                         <Button variant="ghost" size="sm" onClick={handleCopy}>
-                          {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
+                          {copied ? (
+                            <Check className="w-4 h-4 mr-2 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4 mr-2" />
+                          )}
                           {copied ? 'Copied!' : 'Copy'}
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Save className="w-4 h-4 mr-2" />
-                          Save
+                        <Button variant="ghost" size="sm" onClick={handleDownload}>
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
                         </Button>
                       </div>
                     </div>
@@ -277,33 +317,33 @@ ${getSimulatedCode(language, action, framework, input)}`
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
                       <BookOpen className="w-5 h-5" />
-                      Supported Languages
+                      Available Templates
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {languages.map((lang) => (
-                        <span 
-                          key={lang.value}
-                          className={cn(
-                            "px-2 py-1 text-xs rounded-full",
-                            language === lang.value 
-                              ? "bg-ink-black text-ink-paper" 
-                              : "bg-ink-light/10 text-ink-gray"
-                          )}
-                        >
-                          {lang.label}
-                        </span>
+                    <div className="space-y-3">
+                      {availableTemplates.map((template) => (
+                        <div key={template.value} className="flex items-start gap-3">
+                          <ChevronRight className="w-4 h-4 text-ink-gray mt-0.5 flex-shrink-0" />
+                          <div>
+                            <span className={cn(
+                              "text-sm font-medium",
+                              templateType === template.value ? "text-ink-black" : "text-ink-gray"
+                            )}>
+                              {template.label}
+                            </span>
+                            <p className="text-xs text-ink-light mt-0.5">{template.description}</p>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Alert title="About Code Generation" intent="info">
+                <Alert title="Template-Based Code Generation" intent="info">
                   <p className="text-sm text-ink-light mt-1">
-                    The AI can help you write new code, debug existing code, 
-                    explain how code works, optimize performance, or review 
-                    code quality.
+                    Generate boilerplate code instantly from pre-built templates. 
+                    No AI required - fast and reliable.
                   </p>
                 </Alert>
               </div>
@@ -313,291 +353,4 @@ ${getSimulatedCode(language, action, framework, input)}`
       </Page>
     </div>
   )
-}
-
-function getPlaceholder(action: string): string {
-  switch (action) {
-    case 'write':
-      return `Describe what you want to build...
-
-Example:
-Create a React hook that fetches data from an API with loading and error states`
-    case 'debug':
-      return `Paste your code with the error...
-
-Example:
-function getUser() {
-  return fetch('/api/user')
-  // Error: Cannot read property 'name' of undefined
-}`
-    case 'explain':
-      return `Paste code to explain...
-
-Example:
-const debounce = (fn, delay) => {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
-};`
-    case 'optimize':
-      return `Paste code to optimize...
-
-Example:
-for (let i = 0; i < 1000000; i++) {
-  console.log(i);
-}`
-    default:
-      return 'Enter your code here...'
-  }
-}
-
-function getSimulatedCode(language: string, action: string, framework: string, input: string): string {
-  if (action === 'write') {
-    return `// Generated ${language} code${framework !== 'none' ? ` using ${framework}` : ''}
-
-${getCodeTemplate(language, framework)}`
-  } else if (action === 'debug') {
-    return `// Debug Analysis
-
-**Issues Found:**
-1. Missing error handling for API response
-2. No loading state management
-3. Undefined check needed before accessing properties
-
-**Suggested Fix:**
-\`\`\`${language}
-// Add error handling
-try {
-  const response = await fetch('/api/user');
-  if (!response.ok) throw new Error('Failed to fetch');
-  const data = await response.json();
-  // Now safe to access data properties
-} catch (error) {
-  console.error('Error:', error);
-}
-\`\`\``
-  } else if (action === 'explain') {
-    return `// Code Explanation
-
-This code implements a **debounce pattern** commonly used for:
-
-1. **Delay execution** - Waits until the user stops calling the function
-2. **Clear previous timer** - Cancels any pending execution
-3. **Single execution** - Only runs once after the delay
-
-**How it works:**
-- When called, it clears any existing timeout
-- Sets a new timeout for the specified delay
-- Only executes if no new calls are made within that delay
-- Useful for search inputs, resize handlers, etc.
-`
-  } else if (action === 'optimize') {
-    return `// Optimized Code
-
-**Performance Improvements:**
-1. Reduced loop iterations
-2. Added early termination
-3. Used more efficient algorithm
-
-\`\`\`${language}
-// Before: O(n²) complexity
-// After: O(n) complexity
-
-const result = data
-  .filter(item => item.active)
-  .map(item => item.value)
-  .slice(0, 10);
-\`\`\`
-
-**Estimated improvement:** 60-80% faster execution
-`
-  } else {
-    return `// Code Review
-
-**Summary:** The code is functional but has room for improvement.
-
-**Strengths:**
-✓ Clean naming conventions
-✓ Good use of modern syntax
-✓ Reasonable structure
-
-**Suggestions:**
-1. Add JSDoc comments for functions
-2. Consider extracting magic numbers to constants
-3. Add unit tests for edge cases
-4. Use TypeScript for better type safety
-`
-  }
-}
-
-function getCodeTemplate(language: string, framework: string): string {
-  const templates: Record<string, Record<string, string>> = {
-    javascript: {
-      none: `async function fetchData(url) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(\`HTTP error! status: \${response.status}\`);
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Fetch error:', error);
-    throw error;
-  }
-}`,
-      react: `import { useState, useEffect } from 'react';
-
-export function useFetch(url) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        setData(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err);
-        setLoading(false);
-      });
-  }, [url]);
-
-  return { data, loading, error };
-}`,
-      express: `const express = require('express');
-const router = express.Router();
-
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const data = await fetchFromDatabase(id);
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-module.exports = router;`,
-    },
-    typescript: {
-      none: `interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-async function fetchUser(id: string): Promise<User> {
-  const response = await fetch(\`/api/users/\${id}\`);
-  if (!response.ok) throw new Error('User not found');
-  return response.json();
-}`,
-      nextjs: `import { NextResponse } from 'next/server';
-
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  
-  const data = await fetchData(id);
-  return NextResponse.json(data);
-}`,
-    },
-    python: {
-      none: `import asyncio
-from typing import Optional
-
-async def fetch_data(url: str) -> Optional[dict]:
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(url) as response:
-                return await response.json()
-        except aiohttp.ClientError as e:
-            print(f"Error: {e}")
-            return None`,
-      django: `from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
-
-@require_http_methods(["GET"])
-def get_user(request, user_id):
-    try:
-        user = User.objects.get(id=user_id)
-        return JsonResponse({
-            'id': user.id,
-            'name': user.name,
-            'email': user.email
-        })
-    except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)`,
-      flask: `from flask import Flask, jsonify, request
-
-app = Flask(__name__)
-
-@app.route('/api/users/<int:user_id>')
-def get_user(user_id):
-    user = User.query.get_or_404(user_id)
-    return jsonify({
-        'id': user.id,
-        'name': user.name,
-        'email': user.email
-    })`,
-    },
-    go: {
-      none: `package main
-
-import (
-    "encoding/json"
-    "net/http"
-)
-
-type User struct {
-    ID    string \`json:"id"\`
-    Name  string \`json:"name"\`
-    Email string \`json:"email"\`
-}
-
-func fetchUser(id string) (*User, error) {
-    resp, err := http.Get("/api/users/" + id)
-    if err != nil {
-        return nil, err
-    }
-    defer resp.Body.Close()
-    
-    var user User
-    if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-        return nil, err
-    }
-    return &user, nil
-}`,
-    },
-    rust: {
-      none: `use serde::{Deserialize, Serialize};
-use reqwest::Client;
-use tokio;
-
-#[derive(Serialize, Deserialize)]
-struct User {
-    id: String,
-    name: String,
-    email: String,
-}
-
-async fn fetch_user(id: &str) -> Result<User, reqwest::Error> {
-    let client = Client::new();
-    let response = client
-        .get(&format!("https://api.example.com/users/{}", id))
-        .send()
-        .await?;
-    
-    response.json::<User>().await
-}`,
-    },
-  }
-
-  const langTemplates = templates[language] || templates.javascript
-  return langTemplates[framework] || langTemplates.none || '// Code not available for this combination'
 }
