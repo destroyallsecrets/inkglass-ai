@@ -11,7 +11,7 @@ import {
   CardTitle,
   CardContent,
 } from '@/components/ui'
-import { Select, Toggle } from '@/components/forms'
+import { Select } from '@/components/forms'
 import {
   PenTool,
   Copy,
@@ -22,57 +22,53 @@ import {
   Lightbulb,
   Keyboard,
   BookOpen,
-  Sparkles,
   FileText,
-  Menu,
   X,
+  Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  writingTypes,
+  toneModifiers,
+  generateTemplate,
+  generateSocialPost,
+  type WritingType,
+  type Tone,
+} from '@/lib/writer'
 
-const writingTypes = [
-  { value: 'blog', label: 'Blog Post' },
-  { value: 'email', label: 'Email' },
-  { value: 'social', label: 'Social Media' },
-  { value: 'business', label: 'Business' },
-  { value: 'creative', label: 'Creative' },
-  { value: 'academic', label: 'Academic' },
-]
-
-const tones = [
+const tones: { value: Tone; label: string }[] = [
   { value: 'formal', label: 'Formal' },
   { value: 'professional', label: 'Professional' },
   { value: 'casual', label: 'Casual' },
   { value: 'friendly', label: 'Friendly' },
-  { value: 'persuasive', label: 'Persuasive' },
 ]
 
-const lengths = [
-  { value: 'short', label: 'Short (100-200 words)' },
-  { value: 'medium', label: 'Medium (300-500 words)' },
-  { value: 'long', label: 'Long (800-1000 words)' },
-]
+const writingTypeOptions = Object.entries(writingTypes).map(([value, data]) => ({
+  value,
+  label: data.name,
+  description: data.description,
+}))
 
 export default function WritePage() {
-  const [input, setInput] = useState('')
+  const [writingType, setWritingType] = useState<WritingType>('email')
+  const [tone, setTone] = useState<Tone>('professional')
+  const [recipient, setRecipient] = useState('')
+  const [sender, setSender] = useState('')
+  const [subject, setSubject] = useState('')
+  const [topic, setTopic] = useState('')
   const [output, setOutput] = useState('')
-  const [writingType, setWritingType] = useState('blog')
-  const [tone, setTone] = useState('professional')
-  const [length, setLength] = useState('medium')
-  const [seoOptimized, setSeoOptimized] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [showDocs, setShowDocs] = useState(false)
-  const [showDocsMobile, setShowDocsMobile] = useState(false)
 
   const handleGenerate = () => {
-    if (!input.trim()) return
-    setIsProcessing(true)
-    
-    setTimeout(() => {
-      const generatedContent = generateWriting(writingType, tone, length, input, seoOptimized)
-      setOutput(generatedContent)
-      setIsProcessing(false)
-    }, 2000)
+    const template = generateTemplate(writingType, {
+      recipient,
+      sender,
+      subject,
+      topic,
+      tone,
+    })
+    setOutput(template)
   }
 
   const handleCopy = async () => {
@@ -81,8 +77,33 @@ export default function WritePage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleDownload = () => {
+    const extensions: Record<WritingType, string> = {
+      'email': 'txt',
+      'letter': 'txt',
+      'memo': 'txt',
+      'report': 'md',
+      'proposal': 'md',
+      'resume': 'md',
+      'blog-post': 'md',
+      'social-post': 'txt',
+      'press-release': 'txt',
+    }
+    const filename = `${writingType}.${extensions[writingType]}`
+    const blob = new Blob([output], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   const handleReset = () => {
-    setInput('')
+    setRecipient('')
+    setSender('')
+    setSubject('')
+    setTopic('')
     setOutput('')
   }
 
@@ -92,15 +113,15 @@ export default function WritePage() {
 
       <Page className="flex-1">
         <div className="lg:hidden fixed top-0 right-0 z-50 p-4">
-          <Button variant="secondary" size="sm" onClick={() => setShowDocsMobile(!showDocsMobile)}>
-            {showDocsMobile ? <X className="w-4 h-4" /> : <HelpCircle className="w-4 h-4" />}
+          <Button variant="secondary" size="sm" onClick={() => setShowDocs(!showDocs)}>
+            {showDocs ? <X className="w-4 h-4" /> : <HelpCircle className="w-4 h-4" />}
           </Button>
         </div>
 
         <div className="p-4 lg:p-8">
           <Header
             title="Writing Assistant"
-            subtitle="Generate and enhance content with AI"
+            subtitle="Generate writing templates for common formats"
             className="mb-6"
           />
 
@@ -108,64 +129,88 @@ export default function WritePage() {
             {/* Main Content */}
             <div className={cn(
               "space-y-6",
-              showDocs || showDocsMobile ? "xl:col-span-2" : "xl:col-span-3"
+              showDocs ? "xl:col-span-2" : "xl:col-span-3"
             )}>
               <Card variant="paper" padding="md">
                 <CardContent className="p-4 lg:p-6">
                   <CardHeader className="p-0 mb-4">
                     <CardTitle className="flex items-center gap-2">
                       <PenTool className="w-5 h-5" />
-                      Writing Configuration
+                      Template Configuration
                     </CardTitle>
                   </CardHeader>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <Select
-                      label="Type"
-                      options={writingTypes}
+                      label="Writing Type"
+                      options={writingTypeOptions.map(t => ({ value: t.value, label: t.label }))}
                       value={writingType}
-                      onChange={(v) => setWritingType(v)}
+                      onChange={(v) => setWritingType(v as WritingType)}
                     />
                     <Select
                       label="Tone"
                       options={tones}
                       value={tone}
-                      onChange={(v) => setTone(v)}
-                    />
-                    <Select
-                      label="Length"
-                      options={lengths}
-                      value={length}
-                      onChange={(v) => setLength(v)}
+                      onChange={(v) => setTone(v as Tone)}
                     />
                   </div>
 
-                  {writingType === 'blog' && (
-                    <div className="mb-4">
-                      <Toggle
-                        label="SEO Optimized"
-                        checked={seoOptimized}
-                        onChange={setSeoOptimized}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-ink-black mb-2">
+                        Recipient (To)
+                      </label>
+                      <input
+                        type="text"
+                        value={recipient}
+                        onChange={(e) => setRecipient(e.target.value)}
+                        placeholder="e.g., John Smith, Hiring Manager"
+                        className="w-full px-4 py-2 bg-ink-cream/50 border border-ink-light/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-ink-medium/30"
                       />
                     </div>
-                  )}
+                    <div>
+                      <label className="block text-sm font-medium text-ink-black mb-2">
+                        Sender (From)
+                      </label>
+                      <input
+                        type="text"
+                        value={sender}
+                        onChange={(e) => setSender(e.target.value)}
+                        placeholder="e.g., Your Name"
+                        className="w-full px-4 py-2 bg-ink-cream/50 border border-ink-light/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-ink-medium/30"
+                      />
+                    </div>
+                  </div>
 
-                  <div>
+                  <div className="mb-4">
                     <label className="block text-sm font-medium text-ink-black mb-2">
-                      Topic or Brief
+                      Subject
                     </label>
-                    <textarea
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder={getPlaceholder(writingType)}
-                      className="w-full h-40 px-4 py-3 bg-ink-cream/50 border border-ink-light/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-ink-medium/30 resize-none"
+                    <input
+                      type="text"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      placeholder="e.g., Meeting Request, Project Update"
+                      className="w-full px-4 py-2 bg-ink-cream/50 border border-ink-light/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-ink-medium/30"
                     />
                   </div>
 
-                  <div className="flex flex-wrap gap-3 mt-6">
-                    <Button onClick={handleGenerate} isLoading={isProcessing} disabled={!input.trim()}>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Generate
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-ink-black mb-2">
+                      Topic / Main Points
+                    </label>
+                    <textarea
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                      placeholder="Describe the main topic or key points to include..."
+                      className="w-full h-32 px-4 py-3 bg-ink-cream/50 border border-ink-light/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-ink-medium/30 resize-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <Button onClick={handleGenerate}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Generate Template
                     </Button>
                     <Button variant="ghost" onClick={handleReset}>
                       <RefreshCw className="w-4 h-4 mr-2" />
@@ -182,21 +227,25 @@ export default function WritePage() {
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <CardTitle className="flex items-center gap-2">
                           <FileText className="w-5 h-5" />
-                          Generated Content
+                          Generated Template
                         </CardTitle>
                         <div className="flex gap-2">
                           <Button variant="ghost" size="sm" onClick={handleCopy}>
-                            {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
+                            {copied ? (
+                              <Check className="w-4 h-4 mr-2 text-green-500" />
+                            ) : (
+                              <Copy className="w-4 h-4 mr-2" />
+                            )}
                             {copied ? 'Copied!' : 'Copy'}
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <Save className="w-4 h-4 mr-2" />
-                            Save
+                          <Button variant="ghost" size="sm" onClick={handleDownload}>
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
-                    <pre className="whitespace-pre-wrap text-sm bg-transparent p-0 font-sans">
+                    <pre className="whitespace-pre-wrap text-sm bg-ink-light/10 p-4 rounded-lg font-sans">
                       {output}
                     </pre>
                   </CardContent>
@@ -205,32 +254,32 @@ export default function WritePage() {
             </div>
 
             {/* Documentation Panel */}
-            {(showDocs || showDocsMobile) && (
+            {showDocs && (
               <div className="space-y-6">
                 <Card variant="ink" padding="md">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Lightbulb className="w-5 h-5" />
-                      Tips
+                      How It Works
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm text-ink-light">
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Be specific about your target audience</span>
+                        <span>Select a writing type template</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Include key points you want covered</span>
+                        <span>Choose your preferred tone</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Mention the desired call-to-action</span>
+                        <span>Fill in the context fields</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Enable SEO for web content</span>
+                        <span>Generate and customize your template</span>
                       </li>
                     </ul>
                   </CardContent>
@@ -239,23 +288,27 @@ export default function WritePage() {
                 <Card variant="paper" padding="md">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <Keyboard className="w-5 h-5" />
-                      Writing Types
+                      <BookOpen className="w-5 h-5" />
+                      Available Templates
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {writingTypes.map((type) => (
-                        <div
-                          key={type.value}
-                          className={cn(
-                            "p-2 rounded-lg text-sm",
-                            writingType === type.value
-                              ? "bg-ink-black text-ink-paper"
-                              : "hover:bg-ink-light/10"
-                          )}
-                        >
-                          {type.label}
+                    <div className="space-y-3">
+                      {writingTypeOptions.map((type) => (
+                        <div key={type.value} className="flex items-start gap-3">
+                          <div className={cn(
+                            "w-2 h-2 rounded-full mt-2",
+                            writingType === type.value ? "bg-ink-black" : "bg-ink-light"
+                          )} />
+                          <div>
+                            <span className={cn(
+                              "text-sm font-medium",
+                              writingType === type.value ? "text-ink-black" : "text-ink-gray"
+                            )}>
+                              {type.label}
+                            </span>
+                            <p className="text-xs text-ink-light">{type.description}</p>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -265,15 +318,28 @@ export default function WritePage() {
                 <Card variant="paper" padding="md">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <BookOpen className="w-5 h-5" />
+                      <Keyboard className="w-5 h-5" />
                       Tone Guide
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2 text-sm">
-                      <div><span className="font-medium">Formal:</span> <span className="text-ink-gray">Business reports, academic</span></div>
-                      <div><span className="font-medium">Professional:</span> <span className="text-ink-gray">Client communications</span></div>
-                      <div><span className="font-medium">Casual:</span> <span className="text-ink-gray">Friendly emails, blog</span></div>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="font-medium">Formal</span>
+                        <p className="text-ink-gray">Business reports, official letters, academic writing</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Professional</span>
+                        <p className="text-ink-gray">Client communications, proposals, memos</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Casual</span>
+                        <p className="text-ink-gray">Friendly emails, internal communications</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Friendly</span>
+                        <p className="text-ink-gray">Informal notes, team updates</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -284,39 +350,4 @@ export default function WritePage() {
       </Page>
     </div>
   )
-}
-
-function getPlaceholder(type: string): string {
-  switch (type) {
-    case 'blog':
-      return 'Write a blog post about [topic]. Include key points: ...'
-    case 'email':
-      return 'Write a follow-up email after [event]. Tone: professional...'
-    case 'social':
-      return 'Create an Instagram post about [product]. Include CTA...'
-    case 'business':
-      return 'Project proposal for [project]. Include timeline and budget...'
-    default:
-      return 'Describe what you want to write about...'
-  }
-}
-
-function generateWriting(type: string, tone: string, length: string, topic: string, seo: boolean): string {
-  const wordCount = length === 'short' ? 150 : length === 'long' ? 800 : 400
-  
-  return `${topic}
-
-Introduction:
-This comprehensive guide explores the key aspects of ${topic.toLowerCase()}. Whether you're new to this topic or looking to deepen your understanding, this article provides valuable insights.
-
-Key Points:
-• Understanding the fundamentals
-• Best practices for implementation
-• Common challenges and solutions
-• Actionable steps to get started
-
-Conclusion:
-${topic} offers significant benefits. Start implementing these strategies today and track your progress over time.
-
-${seo && type === 'blog' ? '## Related Topics\n- Getting Started Guide\n- FAQ\n## Share This Article' : ''}`
 }

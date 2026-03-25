@@ -92,50 +92,14 @@ function ChatContent() {
     setMessages((prev) => [...prev, userMessage])
     setIsLoading(true)
 
-    if (token) {
-      try {
-        const result = await api.chat.chat(token, {
-          message: value,
-          sessionId: currentSession?.id !== 'new' ? currentSession?.id : undefined,
-        })
-
-        if (result.sessionId !== currentSession?.id) {
-          setCurrentSession({ id: result.sessionId, title: value.slice(0, 50) })
-          router.push(`/chat?session=${result.sessionId}`)
-        }
-
-        const assistantMessage: ChatMessage = {
-          id: result.messageId,
-          role: 'assistant',
-          content: result.response,
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, assistantMessage])
-        loadSessions()
-      } catch (error) {
-        console.error('Chat error:', error)
-        const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'I apologize, but I encountered an error processing your request. Please try again.',
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, errorMessage])
-      }
-    } else {
-      const responses = [
-        'I understand you want to explore this topic. Let me help you with that.',
-        'That\'s a great question! Let me provide some insights.',
-        'Based on my analysis, here are the key points to consider...',
-      ]
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: responses[Math.floor(Math.random() * responses.length)],
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, assistantMessage])
+    const response = getTemplateResponse(value)
+    const assistantMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: response,
+      timestamp: new Date(),
     }
+    setMessages((prev) => [...prev, assistantMessage])
 
     setIsLoading(false)
   }
@@ -361,4 +325,140 @@ export default function ChatPage() {
       <ChatContent />
     </Suspense>
   )
+}
+
+function getTemplateResponse(message: string): string {
+  const lower = message.toLowerCase()
+  
+  if (lower.includes('code') || lower.includes('function') || lower.includes('bug') || lower.includes('error')) {
+    return `Here's a template for handling this code issue:
+
+\`\`\`javascript
+try {
+  // Your code here
+  const result = await processData(input);
+  return result;
+} catch (error) {
+  console.error('Error:', error);
+  // Handle the error appropriately
+  throw error;
+}
+\`\`\`
+
+**Tips:**
+- Add proper error handling
+- Log errors for debugging
+- Consider retry logic for network calls
+- Test edge cases`
+  }
+  
+  if (lower.includes('write') || lower.includes('essay') || lower.includes('article')) {
+    return `Here's a structured approach for your writing:
+
+**1. Introduction** (10% of length)
+- Hook the reader with an interesting fact or question
+- Provide context for your topic
+- End with a clear thesis statement
+
+**2. Body** (80% of length)
+- Each paragraph should cover one main point
+- Use evidence and examples to support your arguments
+- Transition smoothly between paragraphs
+
+**3. Conclusion** (10% of length)
+- Restate your thesis in new words
+- Summarize key points
+- End with a call to action or thought-provoking statement`
+  }
+  
+  if (lower.includes('explain') || lower.includes('what is') || lower.includes('how does')) {
+    return `Here's a clear explanation:
+
+**Key Concept:**
+This topic involves several interconnected parts that work together to achieve a specific outcome.
+
+**Main Components:**
+1. **Foundation** - The basic building blocks
+2. **Process** - How things work together
+3. **Application** - Real-world uses
+
+**Summary:**
+Understanding this concept is valuable because it helps you make informed decisions and apply best practices in your work.`
+  }
+  
+  if (lower.includes('help') || lower.includes('how do i')) {
+    return `Here are some steps to help you:
+
+**Step 1: Define Your Goal**
+Clearly state what you want to achieve
+
+**Step 2: Gather Information**
+Research and collect relevant data
+
+**Step 3: Plan Your Approach**
+Break down the task into manageable steps
+
+**Step 4: Execute**
+Take action on each step
+
+**Step 5: Review**
+Evaluate your results and adjust as needed
+
+Would you like me to elaborate on any of these steps?`
+  }
+  
+  if (lower.includes('translate') || lower.includes('translation') || lower.includes('language')) {
+    return `For translation help, I recommend:
+
+1. **Use the Translation page** (/translate) for common phrases
+2. **Key tips:**
+   - Keep sentences simple
+   - Avoid idioms and slang
+   - Use proper punctuation
+   - Verify with native speakers when possible
+
+3. **Resources:**
+   - Google Translate for quick reference
+   - DeepL for better context understanding
+   - Native speaker review for important documents`
+  }
+  
+  if (lower.includes('data') || lower.includes('analyze') || lower.includes('chart') || lower.includes('graph')) {
+    return `For data analysis, I can help you structure your approach:
+
+**Data Analysis Framework:**
+1. **Define the Question** - What do you want to learn?
+2. **Collect Data** - Gather relevant information
+3. **Clean Data** - Remove errors and inconsistencies
+4. **Analyze** - Look for patterns and trends
+5. **Visualize** - Create charts and graphs
+6. **Interpret** - Draw conclusions
+
+**Common Chart Types:**
+- Bar chart: Comparing categories
+- Line chart: Showing trends over time
+- Pie chart: Showing proportions
+- Scatter plot: Showing relationships`
+  }
+  
+  if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
+    return `Hello! 👋 I'm here to help you with:
+
+- **Code** - Writing, debugging, explaining
+- **Writing** - Essays, emails, articles
+- **Translation** - Common phrases in multiple languages
+- **Analysis** - Data interpretation and insights
+- **General questions** - Explaining concepts
+
+What would you like help with today?`
+  }
+  
+  const responses = [
+    'I can help with that! Let me provide some structured guidance. What specific aspect would you like to explore?',
+    'Great question! Here\'s a general framework to approach this:\n\n1. Define the goal\n2. Identify key requirements\n3. Break into manageable parts\n4. Execute and review',
+    'I\'m ready to help! Could you provide more details about your specific use case?',
+    'Here are some key points to consider:\n\n- Focus on the core objective\n- Break complex tasks into steps\n- Test thoroughly\n- Iterate based on feedback',
+  ]
+  
+  return responses[Math.floor(Math.random() * responses.length)]
 }
