@@ -21,11 +21,27 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="min-h-screen">
         <Providers>
           {children}
         </Providers>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('SW registered:', registration.scope);
+                  }).catch(function(error) {
+                    console.log('SW registration failed:', error);
+                  });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   )

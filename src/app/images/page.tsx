@@ -12,7 +12,6 @@ import {
   CardContent,
   Alert,
 } from '@/components/ui'
-import { Select } from '@/components/forms'
 import {
   Image as ImageIcon,
   Upload,
@@ -22,29 +21,27 @@ import {
   Save,
   HelpCircle,
   Lightbulb,
-  Keyboard,
   BookOpen,
-  Sparkles,
   Link as LinkIcon,
-  Scan,
-  Type,
-  Shapes,
   Eye,
+  Palette,
+  Info,
+  Maximize2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
-const analysisTypes = [
-  { value: 'describe', label: 'Describe Image' },
-  { value: 'objects', label: 'Detect Objects' },
-  { value: 'text', label: 'Extract Text (OCR)' },
-  { value: 'faces', label: 'Analyze Faces' },
-]
+import {
+  analyzeImage,
+  formatImageSize,
+  getImageCategory,
+  rgbToHex,
+  type ImageAnalysis,
+} from '@/lib/images'
 
 export default function ImagesPage() {
   const [image, setImage] = useState<string | null>(null)
   const [imageName, setImageName] = useState<string>('')
-  const [analysisType, setAnalysisType] = useState('describe')
-  const [result, setResult] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [analysis, setAnalysis] = useState<ImageAnalysis | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [copied, setCopied] = useState(false)
   const [showDocs, setShowDocs] = useState(true)
@@ -59,6 +56,8 @@ export default function ImagesPage() {
       reader.onload = (e) => {
         setImage(e.target?.result as string)
         setImageName(file.name)
+        setImageFile(file)
+        setAnalysis(null)
       }
       reader.readAsDataURL(file)
     }
@@ -68,16 +67,7 @@ export default function ImagesPage() {
     e.preventDefault()
     setIsDragging(false)
     const file = e.dataTransfer.files[0]
-    handleFileSelect(file)
-  }
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  const handleDragLeave = () => {
-    setIsDragging(false)
+    if (file) handleFileSelect(file)
   }
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,22 +79,47 @@ export default function ImagesPage() {
     if (imageUrl) {
       setImage(imageUrl)
       setImageName(imageUrl.split('/').pop() || 'image')
+      setImageFile(null)
+      setAnalysis(null)
     }
   }
 
-  const handleAnalyze = () => {
-    if (!image) return
+  const handleAnalyze = async () => {
+    if (!imageFile && !image) return
     setIsProcessing(true)
     
-    setTimeout(() => {
-      const analysis = analyzeImage(analysisType, image)
-      setResult(analysis)
-      setIsProcessing(false)
-    }, 2000)
+    try {
+      if (imageFile) {
+        const result = await analyzeImage(imageFile)
+        setAnalysis(result)
+      } else if (image) {
+        const response = await fetch(image)
+        const blob = await response.blob()
+        const file = new File([blob], 'image.jpg', { type: blob.type })
+        const result = await analyzeImage(file)
+        setAnalysis(result)
+      }
+    } catch (error) {
+      console.error('Analysis error:', error)
+    }
+    
+    setIsProcessing(false)
   }
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(result)
+    if (!analysis) return
+    const text = `Image Analysis:
+- Dimensions: ${analysis.width}x${analysis.height}
+- Aspect Ratio: ${analysis.aspectRatio}
+- Format: ${analysis.format}
+- Size: ${formatImageSize(analysis.size)}
+- Category: ${getImageCategory(analysis.brightness, analysis.contrast)}
+- Dominant Color: ${rgbToHex(analysis.dominantColor)}
+- Brightness: ${analysis.brightness}
+- Contrast: ${analysis.contrast}
+- Color Palette: ${analysis.colorPalette.map(rgbToHex).join(', ')}`
+    
+    await navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -112,7 +127,8 @@ export default function ImagesPage() {
   const handleReset = () => {
     setImage(null)
     setImageName('')
-    setResult('')
+    setImageFile(null)
+    setAnalysis(null)
     setImageUrl('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -125,7 +141,7 @@ export default function ImagesPage() {
         <Container className="max-w-6xl">
           <Header
             title="Image Analysis"
-            subtitle="Analyze and understand images with AI"
+            subtitle="Analyze images for colors, dimensions, and properties"
             actions={
               <Button variant="secondary" onClick={() => setShowDocs(!showDocs)}>
                 <HelpCircle className="w-4 h-4 mr-2" />
@@ -149,18 +165,19 @@ export default function ImagesPage() {
                       <>
                         <div
                           onDrop={handleDrop}
-                          onDragOver={handleDragOver}
-                          onDragLeave={handleDragLeave}
+                          onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                          onDragLeave={() => setIsDragging(false)}
                           className={cn(
-                            "border-2 border-dashed rounded-xl p-8 text-center transition-colors",
+                            "border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer",
                             isDragging 
                               ? "border-ink-black bg-ink-light/10" 
                               : "border-ink-light/30 hover:border-ink-light"
                           )}
+                          onClick={() => fileInputRef.current?.click()}
                         >
                           <Upload className="w-12 h-12 mx-auto text-ink-gray mb-4" />
                           <p className="text-ink-gray mb-4">
-                            Drag and drop an image here, or
+                            Drag and drop an image here, or click to browse
                           </p>
                           <input
                             ref={fileInputRef}
@@ -169,7 +186,7 @@ export default function ImagesPage() {
                             onChange={handleFileInputChange}
                             className="hidden"
                           />
-                          <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                          <Button variant="secondary">
                             Browse Files
                           </Button>
                         </div>
@@ -215,56 +232,123 @@ export default function ImagesPage() {
                           </Button>
                         </div>
                         <p className="text-sm text-ink-gray text-center">{imageName}</p>
-                      </div>
-                    )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Select
-                        label="Analysis Type"
-                        options={analysisTypes}
-                        value={analysisType}
-                        onChange={(v) => setAnalysisType(v)}
-                      />
-                      <div className="flex items-end">
                         <Button 
                           className="w-full" 
                           onClick={handleAnalyze} 
                           isLoading={isProcessing}
                           disabled={!image}
                         >
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Analyze
+                          <Eye className="w-4 h-4 mr-2" />
+                          Analyze Image
                         </Button>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              {result && (
+              {analysis && (
                 <Card variant="glass" padding="lg">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="flex items-center gap-2">
-                        <Eye className="w-5 h-5" />
-                        Analysis Result
+                        <Info className="w-5 h-5" />
+                        Image Analysis
                       </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={handleCopy}>
-                          {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
-                          {copied ? 'Copied!' : 'Copy'}
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Save className="w-4 h-4 mr-2" />
-                          Save
-                        </Button>
-                      </div>
+                      <Button variant="ghost" size="sm" onClick={handleCopy}>
+                        {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
+                        {copied ? 'Copied!' : 'Copy'}
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <pre className="whitespace-pre-wrap text-sm bg-transparent p-0 font-sans">
-                      {result}
-                    </pre>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                          <Maximize2 className="w-5 h-5 mx-auto text-ink-gray mb-2" />
+                          <p className="text-xs text-ink-gray">Dimensions</p>
+                          <p className="font-bold">{analysis.width} x {analysis.height}</p>
+                        </div>
+                        <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                          <Info className="w-5 h-5 mx-auto text-ink-gray mb-2" />
+                          <p className="text-xs text-ink-gray">Aspect Ratio</p>
+                          <p className="font-bold">{analysis.aspectRatio}</p>
+                        </div>
+                        <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                          <ImageIcon className="w-5 h-5 mx-auto text-ink-gray mb-2" />
+                          <p className="text-xs text-ink-gray">Format</p>
+                          <p className="font-bold uppercase">{analysis.format}</p>
+                        </div>
+                        <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                          <Info className="w-5 h-5 mx-auto text-ink-gray mb-2" />
+                          <p className="text-xs text-ink-gray">Size</p>
+                          <p className="font-bold">{formatImageSize(analysis.size)}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 bg-ink-light/10 rounded-lg">
+                          <p className="text-xs text-ink-gray mb-2">Dominant Color</p>
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-10 h-10 rounded-lg border border-ink-light/30" 
+                              style={{ backgroundColor: rgbToHex(analysis.dominantColor) }}
+                            />
+                            <div>
+                              <p className="font-bold">{rgbToHex(analysis.dominantColor)}</p>
+                              <p className="text-xs text-ink-gray">{getImageCategory(analysis.brightness, analysis.contrast)}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-4 bg-ink-light/10 rounded-lg">
+                          <p className="text-xs text-ink-gray mb-2">Brightness</p>
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-2 bg-ink-light/30 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-ink-black rounded-full"
+                                style={{ width: `${(analysis.brightness / 255) * 100}%` }}
+                              />
+                            </div>
+                            <p className="font-bold w-12 text-right">{analysis.brightness}</p>
+                          </div>
+                        </div>
+                        <div className="p-4 bg-ink-light/10 rounded-lg">
+                          <p className="text-xs text-ink-gray mb-2">Contrast</p>
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-2 bg-ink-light/30 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-ink-black rounded-full"
+                                style={{ width: `${(analysis.contrast / 255) * 100}%` }}
+                              />
+                            </div>
+                            <p className="font-bold w-12 text-right">{analysis.contrast}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Palette className="w-5 h-5 text-ink-gray" />
+                          <p className="text-sm font-medium">Color Palette</p>
+                        </div>
+                        <div className="flex gap-2">
+                          {analysis.colorPalette.map((color, i) => (
+                            <div 
+                              key={i}
+                              className="flex flex-col items-center gap-1"
+                            >
+                              <div 
+                                className="w-12 h-12 rounded-lg border border-ink-light/30" 
+                                style={{ backgroundColor: rgbToHex(color) }}
+                                title={rgbToHex(color)}
+                              />
+                              <span className="text-xs text-ink-gray">{rgbToHex(color)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -276,26 +360,26 @@ export default function ImagesPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Lightbulb className="w-5 h-5" />
-                      Tips
+                      How It Works
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm text-ink-light">
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Use clear, well-lit images for better results</span>
+                        <span>Upload or paste an image URL</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>PNG format recommended for text extraction</span>
+                        <span>Click Analyze to process</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>High-resolution images provide more detail</span>
+                        <span>View dimensions, colors, and properties</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Face analysis works best with front-facing photos</span>
+                        <span>Copy results to clipboard</span>
                       </li>
                     </ul>
                   </CardContent>
@@ -304,31 +388,31 @@ export default function ImagesPage() {
                 <Card variant="paper" padding="md">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <Scan className="w-5 h-5" />
-                      Analysis Types
+                      <BookOpen className="w-5 h-5" />
+                      Analysis Features
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="space-y-3 text-sm">
                       <div className="flex items-start gap-3">
-                        <Eye className="w-4 h-4 mt-1 text-ink-gray" />
+                        <Maximize2 className="w-4 h-4 mt-1 text-ink-gray" />
                         <div>
-                          <span className="font-medium text-sm">Describe Image</span>
-                          <p className="text-xs text-ink-gray">Get a detailed description of the image content</p>
+                          <span className="font-medium">Dimensions</span>
+                          <p className="text-xs text-ink-gray">Width and height in pixels</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
-                        <Shapes className="w-4 h-4 mt-1 text-ink-gray" />
+                        <Palette className="w-4 h-4 mt-1 text-ink-gray" />
                         <div>
-                          <span className="font-medium text-sm">Detect Objects</span>
-                          <p className="text-xs text-ink-gray">Identify and locate objects in the image</p>
+                          <span className="font-medium">Color Analysis</span>
+                          <p className="text-xs text-ink-gray">Extract dominant colors and palette</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
-                        <Type className="w-4 h-4 mt-1 text-ink-gray" />
+                        <Info className="w-4 h-4 mt-1 text-ink-gray" />
                         <div>
-                          <span className="font-medium text-sm">Extract Text</span>
-                          <p className="text-xs text-ink-gray">OCR to extract text from images</p>
+                          <span className="font-medium">Image Properties</span>
+                          <p className="text-xs text-ink-gray">Format, size, brightness, contrast</p>
                         </div>
                       </div>
                     </div>
@@ -338,13 +422,12 @@ export default function ImagesPage() {
                 <Card variant="paper" padding="md">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <Keyboard className="w-5 h-5" />
                       Supported Formats
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {['JPG', 'PNG', 'GIF', 'WEBP', 'BMP', 'SVG'].map((format) => (
+                      {['JPG', 'PNG', 'GIF', 'WEBP', 'BMP'].map((format) => (
                         <span key={format} className="px-2 py-1 text-xs bg-ink-light/10 rounded-full text-ink-gray">
                           {format}
                         </span>
@@ -354,10 +437,9 @@ export default function ImagesPage() {
                   </CardContent>
                 </Card>
 
-                <Alert title="About Image Analysis" intent="info">
+                <Alert title="Client-Side Processing" intent="info">
                   <p className="text-sm text-ink-light mt-1">
-                    Upload images to get AI-powered analysis including descriptions, 
-                    object detection, text extraction, and more.
+                    All image analysis is done in your browser. No data is sent to external servers.
                   </p>
                 </Alert>
               </div>
@@ -367,67 +449,4 @@ export default function ImagesPage() {
       </Page>
     </div>
   )
-}
-
-function analyzeImage(type: string, imageData: string): string {
-  switch (type) {
-    case 'describe':
-      return `## Image Description
-
-**Overview:**
-The image appears to be a high-quality photograph showing a modern scene with clear visual elements.
-
-**Key Elements:**
-- Subject appears well-lit and clearly visible
-- Background provides good contrast
-- Composition follows standard visual rules
-
-**Details:**
-- Resolution: High quality
-- Lighting: Natural/Balanced
-- Focus: Sharp
-- Style: Modern
-
-**Interpretation:**
-This image captures a contemporary scene that would be suitable for various applications including web content, presentations, or documentation.`
-    case 'objects':
-      return `## Object Detection Results
-
-**Detected Objects:**
-1. Primary Object - High confidence (95%)
-   - Location: Center frame
-   - Size: Medium
-
-2. Secondary Elements - Medium confidence (78%)
-   - Location: Background
-   - Quantity: Multiple
-
-**Scene Classification:**
-- Category: General Scene
-- Setting: Indoor/Outdoor
-- Context: Unspecified
-
-**Recommendations:**
-For better object detection accuracy, ensure the main subjects are clearly visible and not obscured.`
-    case 'text':
-      return `## Text Extraction (OCR) Results
-
-**Extracted Text:**
-\`\`\`
-No readable text detected in this image.
-
-If you need text extraction:
-- Ensure the image is clear and well-lit
-- Use PNG format for best results
-- Make sure text is visible and not too small
-- Avoid blurry or low-resolution images
-\`\`\`
-
-**Confidence:** Low
-**Language:** N/A
-
-**Note:** Text extraction works best with clear, printed text in standard fonts.`
-    default:
-      return 'Analysis complete. Select an analysis type and upload an image to get detailed results.'
-  }
 }

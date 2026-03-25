@@ -16,6 +16,7 @@ import {
   BarChart3,
   History,
   Bookmark,
+  FileCode,
   FileCode2,
   Settings,
   HelpCircle,
@@ -52,6 +53,7 @@ const mainNavItems: NavItem[] = [
 const managementNavItems: NavItem[] = [
   { id: 'history', icon: <History className="w-5 h-5" />, label: 'History', href: '/history' },
   { id: 'bookmarks', icon: <Bookmark className="w-5 h-5" />, label: 'Bookmarks', href: '/bookmarks' },
+  { id: 'snippets', icon: <FileCode className="w-5 h-5" />, label: 'Snippets', href: '/snippets' },
   { id: 'api-docs', icon: <FileCode2 className="w-5 h-5" />, label: 'API Docs', href: '/api-docs' },
 ]
 

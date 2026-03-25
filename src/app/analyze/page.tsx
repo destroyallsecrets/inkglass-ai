@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import { Sidebar } from '@/components/layout'
 import { Container } from '@/components/layout'
 import { Header, Page } from '@/components/layout'
@@ -11,9 +11,8 @@ import {
   CardTitle,
   CardContent,
   Alert,
-  Progress,
 } from '@/components/ui'
-import { Select, Toggle } from '@/components/forms'
+import { Select } from '@/components/forms'
 import {
   BarChart3,
   Upload,
@@ -22,14 +21,45 @@ import {
   HelpCircle,
   Lightbulb,
   Keyboard,
-  BookOpen,
-  Sparkles,
   Table,
   TrendingUp,
   PieChart,
   Activity,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js'
+import { Bar, Line, Pie } from 'react-chartjs-2'
+import {
+  parseCSV,
+  parseJSON,
+  calculateStats,
+  type ParsedData,
+  type DataStats,
+} from '@/lib/data-analysis'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+)
 
 const chartTypes = [
   { value: 'bar', label: 'Bar Chart', icon: BarChart3 },
@@ -38,62 +68,130 @@ const chartTypes = [
   { value: 'table', label: 'Data Table', icon: Table },
 ]
 
+const colors = [
+  'rgba(26, 26, 26, 0.8)',
+  'rgba(74, 74, 74, 0.8)',
+  'rgba(154, 154, 154, 0.8)',
+  'rgba(26, 26, 26, 0.5)',
+  'rgba(74, 74, 74, 0.5)',
+  'rgba(154, 154, 154, 0.5)',
+]
+
+const sampleCSV = `month,sales,users,conversion
+Jan,1200,450,3.2
+Feb,1900,620,4.1
+Mar,1500,510,3.8
+Apr,2300,780,4.5
+May,2100,710,4.2
+Jun,2800,890,5.1
+Jul,2400,820,4.8
+Aug,2600,870,5.0`
+
 export default function AnalyzePage() {
-  const [data, setData] = useState<any[]>([])
-  const [columns, setColumns] = useState<string[]>([])
+  const [parsedData, setParsedData] = useState<ParsedData | null>(null)
   const [chartType, setChartType] = useState('bar')
-  const [insights, setInsights] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [selectedColumn, setSelectedColumn] = useState<string>('')
   const [showDocs, setShowDocs] = useState(true)
-  const [hasData, setHasData] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const sampleData = [
-    { month: 'Jan', sales: 1200, users: 450, conversion: 3.2 },
-    { month: 'Feb', sales: 1900, users: 620, conversion: 4.1 },
-    { month: 'Mar', sales: 1500, users: 510, conversion: 3.8 },
-    { month: 'Apr', sales: 2300, users: 780, conversion: 4.5 },
-    { month: 'May', sales: 2100, users: 710, conversion: 4.2 },
-    { month: 'Jun', sales: 2800, users: 890, conversion: 5.1 },
-  ]
+  const sampleData = useMemo(() => parseCSV(sampleCSV), [])
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      // Simulate CSV parsing
-      setData(sampleData)
-      setColumns(['month', 'sales', 'users', 'conversion'])
-      setHasData(true)
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const text = event.target?.result as string
+      try {
+        if (file.name.endsWith('.json')) {
+          const data = parseJSON(text)
+          setParsedData(data)
+          if (data.numericColumns.length > 0) {
+            setSelectedColumn(data.headers[data.numericColumns[0]])
+          }
+        } else {
+          const data = parseCSV(text)
+          setParsedData(data)
+          if (data.numericColumns.length > 0) {
+            setSelectedColumn(data.headers[data.numericColumns[0]])
+          }
+        }
+      } catch (error) {
+        alert('Failed to parse file. Please check the format.')
+      }
     }
+    reader.readAsText(file)
   }
 
   const handleLoadSample = () => {
-    setData(sampleData)
-    setColumns(['month', 'sales', 'users', 'conversion'])
-    setHasData(true)
-  }
-
-  const handleAnalyze = () => {
-    if (!data.length) return
-    setIsProcessing(true)
-    
-    setTimeout(() => {
-      const analysis = generateAnalysis(data)
-      setInsights(analysis)
-      setIsProcessing(false)
-    }, 2000)
+    setParsedData(sampleData)
+    if (sampleData.numericColumns.length > 0) {
+      setSelectedColumn(sampleData.headers[sampleData.numericColumns[0]])
+    }
   }
 
   const handleReset = () => {
-    setData([])
-    setColumns([])
-    setInsights('')
-    setHasData(false)
+    setParsedData(null)
+    setSelectedColumn('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const handleExport = (format: string) => {
-    alert(`Export as ${format} - Coming soon!`)
+  const chartData = useMemo(() => {
+    if (!parsedData || !selectedColumn) return null
+    
+    const colIndex = parsedData.headers.indexOf(selectedColumn)
+    if (colIndex === -1) return null
+
+    const numericData = parsedData.rows
+      .map(row => ({ label: String(row[0]), value: Number(row[colIndex]) }))
+      .filter(d => !isNaN(d.value))
+
+    if (chartType === 'pie') {
+      return {
+        labels: numericData.map(d => d.label),
+        datasets: [{
+          data: numericData.map(d => d.value),
+          backgroundColor: colors.slice(0, numericData.length),
+          borderColor: 'rgba(26, 26, 26, 1)',
+          borderWidth: 1,
+        }],
+      }
+    }
+
+    return {
+      labels: numericData.map(d => d.label),
+      datasets: [{
+        label: selectedColumn,
+        data: numericData.map(d => d.value),
+        backgroundColor: chartType === 'line' ? 'rgba(26, 26, 26, 0.2)' : colors[0],
+        borderColor: 'rgba(26, 26, 26, 1)',
+        borderWidth: 2,
+        fill: chartType === 'line',
+        tension: 0.3,
+      }],
+    }
+  }, [parsedData, selectedColumn, chartType])
+
+  const columnStats: DataStats | null = useMemo(() => {
+    if (!parsedData || !selectedColumn) return null
+    return parsedData.stats[selectedColumn] || null
+  }, [parsedData, selectedColumn])
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: chartType === 'pie',
+        position: 'bottom' as const,
+      },
+    },
+    scales: chartType === 'pie' ? {} : {
+      y: {
+        beginAtZero: true,
+      },
+    },
   }
 
   return (
@@ -104,7 +202,7 @@ export default function AnalyzePage() {
         <Container className="max-w-6xl">
           <Header
             title="Data Analysis"
-            subtitle="Analyze data and generate insights"
+            subtitle="Upload data and visualize with charts"
             actions={
               <Button variant="secondary" onClick={() => setShowDocs(!showDocs)}>
                 <HelpCircle className="w-4 h-4 mr-2" />
@@ -123,51 +221,139 @@ export default function AnalyzePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {!hasData ? (
-                      <>
-                        <div className="border-2 border-dashed border-ink-light/30 rounded-xl p-8 text-center">
-                          <Upload className="w-12 h-12 mx-auto text-ink-gray mb-4" />
-                          <p className="text-ink-gray mb-4">
-                            Upload a CSV file or load sample data
-                          </p>
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".csv"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                          <div className="flex gap-3 justify-center">
-                            <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
-                              <Upload className="w-4 h-4 mr-2" />
-                              Upload CSV
-                            </Button>
-                            <Button variant="ghost" onClick={handleLoadSample}>
-                              <Activity className="w-4 h-4 mr-2" />
-                              Load Sample
-                            </Button>
-                          </div>
+                  {!parsedData ? (
+                    <div className="border-2 border-dashed border-ink-light/30 rounded-xl p-8 text-center">
+                      <Upload className="w-12 h-12 mx-auto text-ink-gray mb-4" />
+                      <p className="text-ink-gray mb-4">
+                        Upload a CSV or JSON file to analyze
+                      </p>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".csv,.json"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <div className="flex gap-3 justify-center">
+                        <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload File
+                        </Button>
+                        <Button variant="ghost" onClick={handleLoadSample}>
+                          <Activity className="w-4 h-4 mr-2" />
+                          Load Sample
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-5 h-5 text-ink-gray" />
+                          <span className="font-medium">
+                            {parsedData.rows.length} rows, {parsedData.headers.length} columns
+                          </span>
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <Table className="w-5 h-5 text-ink-gray" />
-                            <span className="font-medium">{data.length} rows, {columns.length} columns</span>
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={handleReset}>
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Clear
-                          </Button>
-                        </div>
+                        <Button variant="ghost" size="sm" onClick={handleReset}>
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Clear
+                        </Button>
+                      </div>
 
-                        <div className="overflow-x-auto border border-ink-light/20 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Select
+                          label="Data Column"
+                          options={parsedData.numericColumns.map(i => ({
+                            value: parsedData.headers[i],
+                            label: parsedData.headers[i],
+                          }))}
+                          value={selectedColumn}
+                          onChange={setSelectedColumn}
+                        />
+                        <Select
+                          label="Chart Type"
+                          options={chartTypes.map(c => ({ value: c.value, label: c.label }))}
+                          value={chartType}
+                          onChange={setChartType}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {parsedData && selectedColumn && (
+                <>
+                  {columnStats && (
+                    <Card variant="glass" padding="lg">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5" />
+                          Statistics: {selectedColumn}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                            <p className="text-sm text-ink-gray">Count</p>
+                            <p className="text-2xl font-serif font-bold">{columnStats.count}</p>
+                          </div>
+                          <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                            <p className="text-sm text-ink-gray">Mean</p>
+                            <p className="text-2xl font-serif font-bold">{columnStats.mean.toFixed(2)}</p>
+                          </div>
+                          <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                            <p className="text-sm text-ink-gray">Median</p>
+                            <p className="text-2xl font-serif font-bold">{columnStats.median.toFixed(2)}</p>
+                          </div>
+                          <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                            <p className="text-sm text-ink-gray">Std Dev</p>
+                            <p className="text-2xl font-serif font-bold">{columnStats.stdDev.toFixed(2)}</p>
+                          </div>
+                          <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                            <p className="text-sm text-ink-gray">Min</p>
+                            <p className="text-2xl font-serif font-bold">{columnStats.min}</p>
+                          </div>
+                          <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                            <p className="text-sm text-ink-gray">Max</p>
+                            <p className="text-2xl font-serif font-bold">{columnStats.max}</p>
+                          </div>
+                          <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                            <p className="text-sm text-ink-gray">Range</p>
+                            <p className="text-2xl font-serif font-bold">{columnStats.range}</p>
+                          </div>
+                          <div className="p-4 bg-ink-light/10 rounded-lg text-center">
+                            <p className="text-sm text-ink-gray">Sum</p>
+                            <p className="text-2xl font-serif font-bold">{columnStats.sum.toFixed(0)}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <Card variant="paper" padding="lg">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          {chartType === 'bar' && <BarChart3 className="w-5 h-5" />}
+                          {chartType === 'line' && <TrendingUp className="w-5 h-5" />}
+                          {chartType === 'pie' && <PieChart className="w-5 h-5" />}
+                          {chartType === 'table' && <Table className="w-5 h-5" />}
+                          {chartTypes.find(c => c.value === chartType)?.label}
+                        </CardTitle>
+                        <Button variant="ghost" size="sm">
+                          <Download className="w-4 h-4 mr-2" />
+                          Export
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {chartType === 'table' ? (
+                        <div className="overflow-x-auto max-h-96 overflow-y-auto">
                           <table className="w-full text-sm">
-                            <thead className="bg-ink-light/10">
+                            <thead className="bg-ink-light/10 sticky top-0">
                               <tr>
-                                {columns.map((col) => (
+                                {parsedData.headers.map((col) => (
                                   <th key={col} className="px-4 py-2 text-left font-medium text-ink-gray">
                                     {col}
                                   </th>
@@ -175,11 +361,11 @@ export default function AnalyzePage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {data.slice(0, 10).map((row, i) => (
+                              {parsedData.rows.map((row, i) => (
                                 <tr key={i} className="border-t border-ink-light/10">
-                                  {columns.map((col) => (
-                                    <td key={col} className="px-4 py-2">
-                                      {row[col]}
+                                  {row.map((cell, j) => (
+                                    <td key={j} className="px-4 py-2">
+                                      {cell}
                                     </td>
                                   ))}
                                 </tr>
@@ -187,110 +373,18 @@ export default function AnalyzePage() {
                             </tbody>
                           </table>
                         </div>
-                        {data.length > 10 && (
-                          <p className="text-sm text-ink-gray text-center">
-                            Showing first 10 of {data.length} rows
-                          </p>
-                        )}
-                      </>
-                    )}
-
-                    {hasData && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                        <Select
-                          label="Visualization Type"
-                          options={chartTypes.map(c => ({ value: c.value, label: c.label }))}
-                          value={chartType}
-                          onChange={(v) => setChartType(v)}
-                        />
-                        <div className="flex items-end gap-3">
-                          <Button 
-                            className="flex-1" 
-                            onClick={handleAnalyze}
-                            isLoading={isProcessing}
-                          >
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            Analyze & Visualize
-                          </Button>
-                          <Button variant="secondary" onClick={() => handleExport('csv')}>
-                            <Download className="w-4 h-4 mr-2" />
-                            Export
-                          </Button>
+                      ) : (
+                        <div className="h-80">
+                          {chartData && (
+                            chartType === 'bar' ? <Bar data={chartData} options={chartOptions} /> :
+                            chartType === 'line' ? <Line data={chartData} options={chartOptions} /> :
+                            <Pie data={chartData} options={chartOptions} />
+                          )}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {insights && (
-                <Card variant="glass" padding="lg">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5" />
-                        Analysis & Insights
-                      </CardTitle>
-                      <Button variant="ghost" size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        Export Report
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="p-4 bg-ink-light/10 rounded-lg">
-                          <p className="text-sm text-ink-gray">Total Records</p>
-                          <p className="text-2xl font-serif font-bold">{data.length}</p>
-                        </div>
-                        <div className="p-4 bg-ink-light/10 rounded-lg">
-                          <p className="text-sm text-ink-gray">Avg Sales</p>
-                          <p className="text-2xl font-serif font-bold">
-                            ${(data.reduce((acc, d) => acc + d.sales, 0) / data.length).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="p-4 bg-ink-light/10 rounded-lg">
-                          <p className="text-sm text-ink-gray">Total Users</p>
-                          <p className="text-2xl font-serif font-bold">
-                            {data.reduce((acc, d) => acc + d.users, 0).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="p-4 bg-ink-light/10 rounded-lg">
-                          <p className="text-sm text-ink-gray">Avg Conversion</p>
-                          <p className="text-2xl font-serif font-bold">
-                            {(data.reduce((acc, d) => acc + d.conversion, 0) / data.length).toFixed(1)}%
-                          </p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium mb-3">Key Findings:</h4>
-                        <pre className="whitespace-pre-wrap text-sm bg-transparent p-0 font-sans">
-                          {insights}
-                        </pre>
-                      </div>
-
-                      <div className="p-4 bg-ink-light/10 rounded-lg">
-                        <h4 className="font-medium mb-3">Chart Preview ({chartTypes.find(c => c.value === chartType)?.label})</h4>
-                        <div className="h-64 flex items-end justify-around gap-2">
-                          {data.map((d, i) => (
-                            <div key={i} className="flex flex-col items-center gap-2">
-                              <div 
-                                className="w-8 bg-ink-black rounded-t"
-                                style={{ 
-                                  height: `${(d.sales / Math.max(...data.map(d => d.sales))) * 200}px`,
-                                  minHeight: '20px'
-                                }}
-                              />
-                              <span className="text-xs text-ink-gray">{d.month}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
               )}
             </div>
 
@@ -300,58 +394,28 @@ export default function AnalyzePage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Lightbulb className="w-5 h-5" />
-                      Tips
+                      How It Works
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm text-ink-light">
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Use clean CSV files with headers</span>
+                        <span>Upload CSV or JSON files</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>First column should be labels/categories</span>
+                        <span>Select a column to visualize</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Numerical data works best for charts</span>
+                        <span>Choose chart type</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-ink-gray">•</span>
-                        <span>Up to 10,000 rows supported</span>
+                        <span>View statistics and export</span>
                       </li>
                     </ul>
-                  </CardContent>
-                </Card>
-
-                <Card variant="paper" padding="md">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <BarChart3 className="w-5 h-5" />
-                      Chart Types
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {chartTypes.map((chart) => {
-                        const Icon = chart.icon
-                        return (
-                          <div 
-                            key={chart.value}
-                            className={cn(
-                              "flex items-center gap-3 p-2 rounded-lg transition-colors",
-                              chartType === chart.value
-                                ? "bg-ink-black text-ink-paper"
-                                : "hover:bg-ink-light/10"
-                            )}
-                          >
-                            <Icon className="w-4 h-4" />
-                            <span className="text-sm">{chart.label}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
                   </CardContent>
                 </Card>
 
@@ -364,7 +428,7 @@ export default function AnalyzePage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {['CSV', 'TSV', 'JSON'].map((format) => (
+                      {['CSV', 'JSON'].map((format) => (
                         <span key={format} className="px-2 py-1 text-xs bg-ink-light/10 rounded-full text-ink-gray">
                           {format}
                         </span>
@@ -374,12 +438,25 @@ export default function AnalyzePage() {
                   </CardContent>
                 </Card>
 
-                <Alert title="About Data Analysis" intent="info">
-                  <p className="text-sm text-ink-light mt-1">
-                    Upload your data to get automated insights, visualizations, 
-                    and statistical analysis powered by AI.
-                  </p>
-                </Alert>
+                <Card variant="paper" padding="md">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      Statistics Included
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <span className="text-ink-gray">Mean</span>
+                      <span className="text-ink-black">Average value</span>
+                      <span className="text-ink-gray">Median</span>
+                      <span className="text-ink-black">Middle value</span>
+                      <span className="text-ink-gray">Std Dev</span>
+                      <span className="text-ink-black">Variation</span>
+                      <span className="text-ink-gray">Min/Max</span>
+                      <span className="text-ink-black">Range</span>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </div>
@@ -387,37 +464,4 @@ export default function AnalyzePage() {
       </Page>
     </div>
   )
-}
-
-function generateAnalysis(data: any[]): string {
-  const totalSales = data.reduce((acc, d) => acc + (d.sales || 0), 0)
-  const avgSales = totalSales / data.length
-  const maxSales = Math.max(...data.map(d => d.sales))
-  const minSales = Math.min(...data.map(d => d.sales))
-  const maxMonth = data.find(d => d.sales === maxSales)?.month
-  const minMonth = data.find(d => d.sales === minSales)?.month
-
-  return `## Summary Statistics
-
-- **Total Sales:** ${totalSales.toLocaleString()}
-- **Average:** ${avgSales.toLocaleString()} per period
-- **Highest:** ${maxSales.toLocaleString()} (${maxMonth})
-- **Lowest:** ${minSales.toLocaleString()} (${minMonth})
-- **Range:** ${(maxSales - minSales).toLocaleString()} (${(((maxSales - minSales) / minSales * 100)).toFixed(1)}% variation)
-
-## Trends
-
-**Overall Trend:** ${maxSales > avgSales * 1.2 ? 'Upward' : maxSales < avgSales * 0.8 ? 'Downward' : 'Stable'}
-
-The data shows ${maxSales > avgSales * 1.2 ? 'strong positive' : maxSales < avgSales * 0.8 ? 'declining' : 'consistent'} performance across periods.
-
-## Recommendations
-
-1. **Investigate Peak Performance:** The ${maxMonth} spike suggests effective strategies that could be replicated.
-
-2. **Address Underperformance:** ${minMonth} shows room for improvement in this area.
-
-3. **Maintain Consistency:** Focus on reducing variation between periods.
-
-4. **Data-Driven Decisions:** Continue tracking metrics to identify patterns.`
 }
