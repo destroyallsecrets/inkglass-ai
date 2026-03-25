@@ -15,16 +15,16 @@ export function Header({ title, subtitle, actions, className }: HeaderProps) {
   return (
     <header
       className={cn(
-        'flex items-center justify-between py-6 border-b border-ink-light/20',
+        'flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 sm:py-6 border-b border-ink-light/20',
         className
       )}
     >
-      <div>
+      <div className="flex-1 min-w-0">
         {title && (
           <motion.h1
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl font-serif font-bold tracking-tight"
+            className="text-2xl sm:text-3xl font-serif font-bold tracking-tight truncate"
           >
             {title}
           </motion.h1>
@@ -34,13 +34,13 @@ export function Header({ title, subtitle, actions, className }: HeaderProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-ink-gray mt-1"
+            className="text-ink-gray mt-1 text-sm sm:text-base"
           >
             {subtitle}
           </motion.p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-3">{actions}</div>}
+      {actions && <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">{actions}</div>}
     </header>
   )
 }
@@ -52,7 +52,7 @@ interface PageProps {
 
 export function Page({ children, className }: PageProps) {
   return (
-    <main className={cn('min-h-screen bg-ink-paper paper-texture', className)}>
+    <main className={cn('min-h-screen bg-ink-paper paper-texture pt-14 pb-20 lg:pt-0 lg:pb-0', className)}>
       {children}
     </main>
   )
@@ -67,11 +67,11 @@ interface SectionProps {
 
 export function Section({ children, title, description, className }: SectionProps) {
   return (
-    <section className={cn('py-8', className)}>
+    <section className={cn('py-4 sm:py-6 lg:py-8', className)}>
       {(title || description) && (
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           {title && (
-            <h2 className="text-2xl font-serif font-semibold tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-serif font-semibold tracking-tight">
               {title}
             </h2>
           )}

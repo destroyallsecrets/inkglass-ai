@@ -196,24 +196,28 @@ export default function SnippetsPage() {
             title="Code Snippets"
             subtitle="Save and organize your code snippets"
             actions={
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={handleImport}>
-                  <Upload className="w-4 h-4 mr-2" />
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button variant="ghost" size="sm" onClick={handleImport} className="hidden sm:flex">
                   Import
                 </Button>
-                <Button variant="ghost" onClick={handleExport}>
-                  <Download className="w-4 h-4 mr-2" />
+                <Button variant="ghost" size="sm" onClick={handleImport} className="sm:hidden">
+                  <Upload className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={handleExport} className="hidden sm:flex">
                   Export
                 </Button>
-                <Button onClick={openCreateModal}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Snippet
+                <Button variant="ghost" size="sm" onClick={handleExport} className="sm:hidden">
+                  <Download className="w-4 h-4" />
+                </Button>
+                <Button onClick={openCreateModal} size="sm">
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">New Snippet</span>
                 </Button>
               </div>
             }
           />
 
-          <div className="mb-6 flex flex-col md:flex-row gap-4">
+          <div className="mb-4 sm:mb-6 flex flex-col gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-gray" />
               <input
@@ -224,26 +228,28 @@ export default function SnippetsPage() {
                 className="w-full pl-10 pr-4 py-2.5 bg-ink-cream/50 border border-ink-light/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30 focus:border-ink-medium"
               />
             </div>
-            <select
-              value={filterLanguage}
-              onChange={(e) => setFilterLanguage(e.target.value)}
-              className="px-4 py-2.5 bg-ink-cream/50 border border-ink-light/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30"
-            >
-              <option value="">All Languages</option>
-              {allLanguages.map(lang => (
-                <option key={lang} value={lang}>{lang}</option>
-              ))}
-            </select>
-            <select
-              value={filterTag}
-              onChange={(e) => setFilterTag(e.target.value)}
-              className="px-4 py-2.5 bg-ink-cream/50 border border-ink-light/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30"
-            >
-              <option value="">All Tags</option>
-              {allTags.map(tag => (
-                <option key={tag} value={tag}>{tag}</option>
-              ))}
-            </select>
+            <div className="flex gap-2 flex-wrap">
+              <select
+                value={filterLanguage}
+                onChange={(e) => setFilterLanguage(e.target.value)}
+                className="flex-1 min-w-[120px] px-3 py-2 bg-ink-cream/50 border border-ink-light/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30"
+              >
+                <option value="">Language</option>
+                {allLanguages.map(lang => (
+                  <option key={lang} value={lang}>{lang}</option>
+                ))}
+              </select>
+              <select
+                value={filterTag}
+                onChange={(e) => setFilterTag(e.target.value)}
+                className="flex-1 min-w-[120px] px-3 py-2 bg-ink-cream/50 border border-ink-light/30 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ink-medium/30"
+              >
+                <option value="">Tag</option>
+                {allTags.map(tag => (
+                  <option key={tag} value={tag}>{tag}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {filteredSnippets.length === 0 ? (

@@ -24,6 +24,8 @@ import {
   ChevronRight,
   Plus,
   Sparkles,
+  Menu,
+  X,
 } from 'lucide-react'
 import { IconButton } from '@/components/ui/button'
 
@@ -62,100 +64,81 @@ const bottomNavItems: NavItem[] = [
   { id: 'help', icon: <HelpCircle className="w-5 h-5" />, label: 'Help', href: '/help' },
 ]
 
+const mobileNavItems = [
+  { id: 'home', icon: <Home className="w-5 h-5" />, href: '/' },
+  { id: 'chat', icon: <MessageSquare className="w-5 h-5" />, href: '/chat' },
+  { id: 'code', icon: <Code className="w-5 h-5" />, href: '/code' },
+  { id: 'documents', icon: <FileText className="w-5 h-5" />, href: '/documents' },
+  { id: 'images', icon: <Image className="w-5 h-5" />, href: '/images' },
+]
+
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <motion.aside
-      initial={false}
-      animate={{ width: isCollapsed ? 72 : 280 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className={cn(
-        'h-screen bg-ink-cream border-r border-ink-light/20 flex flex-col',
-        className
-      )}
-    >
-      <div className="p-4 flex items-center justify-between">
-        {!isCollapsed && (
-          <Link href="/" className="flex items-center gap-2">
+    <>
+      <motion.aside
+        initial={false}
+        animate={{ width: isCollapsed ? 72 : 280 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className={cn(
+          'hidden lg:flex h-screen bg-ink-cream border-r border-ink-light/20 flex-col flex-shrink-0',
+          className
+        )}
+      >
+        <div className="p-4 flex items-center justify-between">
+          {!isCollapsed && (
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-ink-black flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-ink-paper" />
+              </div>
+              <span className="font-serif font-semibold text-lg text-ink-black">InkGlass</span>
+            </Link>
+          )}
+          {isCollapsed && (
             <div className="w-8 h-8 rounded-lg bg-ink-black flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-ink-paper" />
             </div>
-            <span className="font-serif font-semibold text-lg text-ink-black">InkGlass</span>
-          </Link>
-        )}
-        {isCollapsed && (
-          <div className="w-8 h-8 rounded-lg bg-ink-black flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-ink-paper" />
-          </div>
-        )}
-        <IconButton
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-ink-gray"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
           )}
-        </IconButton>
-      </div>
-
-      <div className="px-3 mb-4">
-        <Link href="/chat">
-          <button
-            className={cn(
-              'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors',
-              'bg-ink-black text-ink-paper hover:bg-ink-dark'
-            )}
+          <IconButton
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="text-ink-gray"
           >
-            <Plus className="w-5 h-5" />
-            {!isCollapsed && <span className="font-medium">New Chat</span>}
-          </button>
-        </Link>
-      </div>
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </IconButton>
+        </div>
 
-      <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-        {!isCollapsed && (
-          <div className="px-3 py-2">
-            <span className="text-xs font-medium text-ink-gray uppercase tracking-wider">
-              AI Tools
-            </span>
-          </div>
-        )}
-        {mainNavItems.map((item) => (
-          <Link
-            key={item.id}
-            href={item.href}
-            className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-              pathname === item.href
-                ? 'bg-ink-black text-ink-paper'
-                : 'text-ink-gray hover:bg-ink-light/10 hover:text-ink-black'
-            )}
-          >
-            {item.icon}
-            {!isCollapsed && <span className="flex-1 text-left">{item.label}</span>}
-            {!isCollapsed && item.badge && (
-              <span className="px-2 py-0.5 text-xs bg-ink-light/20 rounded-full">
-                {item.badge}
-              </span>
-            )}
+        <div className="px-3 mb-4">
+          <Link href="/chat">
+            <button
+              className={cn(
+                'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-colors',
+                'bg-ink-black text-ink-paper hover:bg-ink-dark'
+              )}
+            >
+              <Plus className="w-5 h-5" />
+              {!isCollapsed && <span className="font-medium">New Chat</span>}
+            </button>
           </Link>
-        ))}
+        </div>
 
-        <div className="pt-4">
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {!isCollapsed && (
             <div className="px-3 py-2">
               <span className="text-xs font-medium text-ink-gray uppercase tracking-wider">
-                Management
+                AI Tools
               </span>
             </div>
           )}
-          {managementNavItems.map((item) => (
+          {mainNavItems.map((item) => (
             <Link
               key={item.id}
               href={item.href}
@@ -167,36 +150,135 @@ export function Sidebar({ className }: SidebarProps) {
               )}
             >
               {item.icon}
-              {!isCollapsed && <span>{item.label}</span>}
+              {!isCollapsed && <span className="flex-1 text-left">{item.label}</span>}
+              {!isCollapsed && item.badge && (
+                <span className="px-2 py-0.5 text-xs bg-ink-light/20 rounded-full">
+                  {item.badge}
+                </span>
+              )}
             </Link>
           ))}
+
+          <div className="pt-4">
+            {!isCollapsed && (
+              <div className="px-3 py-2">
+                <span className="text-xs font-medium text-ink-gray uppercase tracking-wider">
+                  Management
+                </span>
+              </div>
+            )}
+            {managementNavItems.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  pathname === item.href
+                    ? 'bg-ink-black text-ink-paper'
+                    : 'text-ink-gray hover:bg-ink-light/10 hover:text-ink-black'
+                )}
+              >
+                {item.icon}
+                {!isCollapsed && <span>{item.label}</span>}
+              </Link>
+            ))}
+          </div>
+
+          <div className="pt-4">
+            {!isCollapsed && (
+              <div className="px-3 py-2">
+                <span className="text-xs font-medium text-ink-gray uppercase tracking-wider">
+                  Account
+                </span>
+              </div>
+            )}
+            {bottomNavItems.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  pathname === item.href
+                    ? 'bg-ink-light/10 text-ink-black'
+                    : 'text-ink-gray hover:bg-ink-light/10 hover:text-ink-black'
+                )}
+              >
+                {item.icon}
+                {!isCollapsed && <span>{item.label}</span>}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </motion.aside>
+
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-ink-cream border-b border-ink-light/20">
+        <div className="flex items-center justify-between px-4 py-3">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-ink-black flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-ink-paper" />
+            </div>
+            <span className="font-serif font-semibold text-lg text-ink-black">InkGlass</span>
+          </Link>
+          <IconButton
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="text-ink-gray"
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </IconButton>
         </div>
 
-        <div className="pt-4">
-          {!isCollapsed && (
-            <div className="px-3 py-2">
-              <span className="text-xs font-medium text-ink-gray uppercase tracking-wider">
-                Account
-              </span>
+        {mobileOpen && (
+          <div className="absolute top-full left-0 right-0 bg-ink-cream border-b border-ink-light/20 shadow-lg max-h-[80vh] overflow-y-auto">
+            <div className="p-4 space-y-6">
+              <Link href="/chat" onClick={() => setMobileOpen(false)}>
+                <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-ink-black text-ink-paper">
+                  <Plus className="w-5 h-5" />
+                  <span className="font-medium">New Chat</span>
+                </button>
+              </Link>
+              <nav className="space-y-1">
+                {[...mainNavItems, ...managementNavItems, ...bottomNavItems].map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
+                      pathname === item.href
+                        ? 'bg-ink-black text-ink-paper'
+                        : 'text-ink-gray hover:bg-ink-light/10 hover:text-ink-black'
+                    )}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </nav>
             </div>
-          )}
-          {bottomNavItems.map((item) => (
+          </div>
+        )}
+      </div>
+
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-ink-cream border-t border-ink-light/20">
+        <div className="flex items-center justify-around px-2 py-2">
+          {mobileNavItems.map((item) => (
             <Link
               key={item.id}
               href={item.href}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs transition-colors',
                 pathname === item.href
-                  ? 'bg-ink-light/10 text-ink-black'
-                  : 'text-ink-gray hover:bg-ink-light/10 hover:text-ink-black'
+                  ? 'text-ink-black'
+                  : 'text-ink-gray'
               )}
             >
               {item.icon}
-              {!isCollapsed && <span>{item.label}</span>}
             </Link>
           ))}
         </div>
       </nav>
-    </motion.aside>
+    </>
   )
 }
