@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ink-black: #0a0a0a;
+    --ink-dark: #1a1a1a;
+    --ink-medium: #3a3a3a;
+    --ink-gray: #6b6b6b;
+    --ink-light: #a0a0a0;
+    --ink-paper: #f5f5f0;
+    --ink-cream: #faf9f6;
+    --ink-white: #ffffff;
+    
+    --glass-surface: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover: rgba(255, 255, 255, 0.06);
+    --glass-blur: 12px;
+    
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+  }
+  
+  * {
+    @apply border-ink-light/20;
+  }
+  
+  body {
+    @apply bg-ink-paper text-ink-black font-sans antialiased;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-blend-mode: soft-light;
+    background-size: 200px 200px;
+  }
+  
+  ::selection {
+    @apply bg-ink-medium/20 text-ink-black;
+  }
+  
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-ink-paper;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink-light/30 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-light/50;
+  }
+}
+
+@layer components {
+  .glass-surface {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+  
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl shadow-glass-light;
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .glass-card:hover {
+    @apply bg-white/10 border-white/15 shadow-glass;
+  }
+  
+  .paper-card {
+    @apply bg-ink-cream border border-ink-light/20 rounded-xl shadow-paper;
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .paper-card:hover {
+    @apply shadow-lg;
+  }
+  
+  .ink-card {
+    @apply bg-ink-black text-ink-paper border border-ink-medium rounded-xl shadow-ink;
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .ink-button {
+    @apply relative overflow-hidden;
+    @apply bg-ink-black text-ink-paper px-6 py-3 rounded-lg;
+    @apply shadow-ink hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px];
+    @apply transition-all duration-150 ease-out;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .ink-button:active:not(:disabled) {
+    @apply translate-x-[1px] translate-y-[1px] shadow-none;
+  }
+  
+  .text-gradient {
+    @apply bg-gradient-to-r from-ink-black via-ink-medium to-ink-black bg-clip-text text-transparent;
+  }
+  
+  .link-underline {
+    @apply underline underline-offset-4 decoration-ink-light/50;
+    @apply hover:decoration-ink-black transition-colors duration-200;
+  }
+  
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-medium focus-visible:ring-offset-2;
+  }
+  
+  .paper-texture {
+    background-image: 
+      linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.02) 50%, transparent 100%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-size: 100% 100%, 150px 150px;
+  }
+  
+  .letterpress {
+    text-shadow: 
+      1px 1px 1px rgba(255,255,255,0.8),
+      -1px -1px 1px rgba(0,0,0,0.1);
+  }
+  
+  .letterpress-dark {
+    text-shadow: 
+      1px 1px 1px rgba(0,0,0,0.3);
+  }
+}
+
+@layer utilities {
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+}
