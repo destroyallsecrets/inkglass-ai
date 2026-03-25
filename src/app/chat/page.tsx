@@ -255,7 +255,7 @@ function ChatContent() {
           {/* Chat Area */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* Mobile Header */}
-            <div className="lg:hidden flex items-center gap-3 p-4 border-b border-ink-light/20">
+            <div className="lg:hidden flex items-center gap-3 p-4 border-b border-ink-light/20 relative z-30">
               <Button variant="ghost" size="sm" onClick={() => setShowSessions(true)}>
                 <Menu className="w-5 h-5" />
               </Button>

@@ -212,7 +212,7 @@ export function Sidebar({ className }: SidebarProps) {
         </nav>
       </motion.aside>
 
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-ink-cream border-b border-ink-light/20">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-[60] bg-ink-cream border-b border-ink-light/20">
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-ink-black flex items-center justify-center">
@@ -239,7 +239,7 @@ export function Sidebar({ className }: SidebarProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="lg:hidden fixed inset-0 bg-black/50 z-40"
+              className="lg:hidden fixed inset-0 bg-black/50 z-[55]"
               onClick={closeMenu}
             />
             <motion.div
@@ -247,7 +247,7 @@ export function Sidebar({ className }: SidebarProps) {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="lg:hidden fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-ink-cream z-50 overflow-y-auto shadow-2xl"
+              className="lg:hidden fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-ink-cream z-[60] overflow-y-auto shadow-2xl"
             >
               <div className="flex items-center justify-between p-4 border-b border-ink-light/20">
                 <Link href="/" className="flex items-center gap-2" onClick={closeMenu}>
