@@ -19,6 +19,7 @@ const sizeStyles: Record<Size, string> = {
   md: 'px-5 py-2.5 text-base rounded-lg gap-2',
   lg: 'px-7 py-3.5 text-lg rounded-xl gap-2.5',
   xl: 'px-9 py-4 text-xl rounded-2xl gap-3',
+  icon: 'p-2 rounded-lg',
 }
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -85,6 +86,7 @@ export function IconButton({
     md: 'w-10 h-10',
     lg: 'w-12 h-12',
     xl: 'w-14 h-14',
+    icon: 'w-8 h-8',
   }
 
   return (

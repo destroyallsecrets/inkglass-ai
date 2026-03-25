@@ -9,6 +9,7 @@ const sizeStyles: Record<Size, string> = {
   md: 'h-2',
   lg: 'h-3',
   xl: 'h-4',
+  icon: 'h-0.5',
 }
 
 const colorStyles = {

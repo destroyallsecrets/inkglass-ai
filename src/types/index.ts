@@ -1,7 +1,7 @@
 import React from 'react'
 
 export type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive'
-export type Size = 'sm' | 'md' | 'lg' | 'xl'
+export type Size = 'sm' | 'md' | 'lg' | 'xl' | 'icon'
 export type Intent = 'default' | 'success' | 'warning' | 'error' | 'info'
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
