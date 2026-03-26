@@ -41,6 +41,8 @@ export default function SettingsPage() {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
   const [newApiKey, setNewApiKey] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     if (token) {
@@ -55,8 +57,10 @@ export default function SettingsPage() {
       const data = await api.settings.get(token)
       setSettings(data)
       setTheme(data.theme || 'light')
+      setError(null)
     } catch (error) {
       console.error('Failed to load settings:', error)
+      setError('Failed to load settings. Please refresh the page.')
     }
   }
 
@@ -67,12 +71,14 @@ export default function SettingsPage() {
       setApiKeys(data)
     } catch (error) {
       console.error('Failed to load API keys:', error)
+      setError('Failed to load API keys.')
     }
   }
 
   const handleSaveSettings = async () => {
     if (!token) return
     setIsSaving(true)
+    setError(null)
     try {
       await api.settings.update(token, {
         theme,
@@ -85,8 +91,11 @@ export default function SettingsPage() {
         paper_texture: settings?.paper_texture ? 1 : 0,
       })
       await loadSettings()
+      setSuccess('Settings saved successfully!')
+      setTimeout(() => setSuccess(null), 3000)
     } catch (error) {
       console.error('Failed to save settings:', error)
+      setError('Failed to save settings. Please try again.')
     } finally {
       setIsSaving(false)
     }
@@ -379,6 +388,16 @@ export default function SettingsPage() {
           />
 
           <Section>
+            {error && (
+              <Alert intent="error" onClose={() => setError(null)} className="mb-6">
+                {error}
+              </Alert>
+            )}
+            {success && (
+              <Alert intent="success" onClose={() => setSuccess(null)} className="mb-6">
+                {success}
+              </Alert>
+            )}
             <Tabs tabs={settingsTabs} />
           </Section>
         </Container>

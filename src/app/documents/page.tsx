@@ -27,7 +27,7 @@ import {
   Eye,
   FileSearch,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, safeJsonParse } from '@/lib/utils'
 import {
   extractTextFromFile,
   getDocumentSummary,
@@ -59,7 +59,7 @@ export default function DocumentsPage() {
   useEffect(() => {
     const stored = localStorage.getItem('inkglass-documents')
     if (stored) {
-      setDocuments(JSON.parse(stored))
+      setDocuments(safeJsonParse<LocalDocument[]>(stored, []))
     }
   }, [])
 

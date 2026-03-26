@@ -29,6 +29,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useKeyboardShortcuts } from '@/lib/hooks'
 import {
   generateCode,
   templateOptions,
@@ -102,6 +103,12 @@ export default function CodePage() {
     setOutput('')
     setGenerated(false)
   }
+
+  useKeyboardShortcuts([
+    { key: 'Enter', ctrl: true, action: handleGenerate, description: 'Generate code' },
+    { key: 'c', ctrl: true, shift: true, action: handleCopy, description: 'Copy output' },
+    { key: '/', ctrl: true, action: () => setShowDocs(prev => !prev), description: 'Toggle docs' },
+  ])
 
   const keyboardShortcuts = [
     { keys: ['Ctrl', 'Enter'], action: 'Generate code' },

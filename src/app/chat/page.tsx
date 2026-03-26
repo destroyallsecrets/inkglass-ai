@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Sidebar } from '@/components/layout'
 import { Page } from '@/components/layout'
-import { Button, Card } from '@/components/ui'
+import { Button, Card, Alert } from '@/components/ui'
 import { ChatBubble, PromptInput } from '@/components/ai'
 import { useAuth } from '@/lib/auth'
 import api from '@/lib/api'
@@ -18,6 +18,7 @@ import {
   X,
   ChevronLeft,
   MessageSquare,
+  RefreshCw,
 } from 'lucide-react'
 import type { ChatMessage } from '@/types'
 import { cn } from '@/lib/utils'
@@ -32,6 +33,7 @@ function ChatContent() {
   const [sessions, setSessions] = useState<any[]>([])
   const [currentSession, setCurrentSession] = useState<any>(null)
   const [showSessions, setShowSessions] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (token) {
@@ -51,8 +53,10 @@ function ChatContent() {
     try {
       const data = await api.chat.getSessions(token)
       setSessions(data)
+      setError(null)
     } catch (error) {
       console.error('Failed to load sessions:', error)
+      setError('Failed to load chat history. Please try again.')
     }
   }
 
@@ -69,8 +73,10 @@ function ChatContent() {
           timestamp: new Date(m.created_at),
         }))
       )
+      setError(null)
     } catch (error) {
       console.error('Failed to load session:', error)
+      setError('Failed to load this conversation. Please try again.')
     }
   }
 
@@ -261,6 +267,31 @@ function ChatContent() {
               </Button>
               <h1 className="font-medium flex-1">Chat</h1>
             </div>
+
+            {/* Error Alert */}
+            {error && (
+              <div className="p-4">
+                <Alert 
+                  intent="error" 
+                  onClose={() => setError(null)}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span>{error}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        setError(null)
+                        loadSessions()
+                      }}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Retry
+                    </Button>
+                  </div>
+                </Alert>
+              </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 lg:p-8">

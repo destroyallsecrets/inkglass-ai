@@ -27,6 +27,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+function safeJsonParse<T = unknown>(json: string, fallback: T): T {
+  try {
+    return JSON.parse(json) as T
+  } catch {
+    return fallback
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
@@ -40,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (savedToken && savedUser) {
       setToken(savedToken)
-      setUser(JSON.parse(savedUser))
+      setUser(safeJsonParse<User | null>(savedUser, null))
       setIsDemoMode(savedDemoMode)
       
       if (!savedDemoMode) {
@@ -48,7 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(userData)
           localStorage.setItem('user', JSON.stringify(userData))
         }).catch(() => {
-          // Backend unavailable, switch to demo mode
           setIsDemoMode(true)
           localStorage.setItem('demoMode', 'true')
         })

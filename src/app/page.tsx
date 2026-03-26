@@ -15,6 +15,7 @@ import {
   Progress,
   Tabs,
   Alert,
+  Skeleton,
 } from '@/components/ui'
 import { Select, Toggle } from '@/components/forms'
 import { ChatBubble, PromptInput } from '@/components/ai'
@@ -101,15 +102,23 @@ export default function HomePage() {
     },
   ])
   const [isLoading, setIsLoading] = useState(false)
+  const [statsLoading, setStatsLoading] = useState(false)
   const [statsData, setStatsData] = useState<any>(null)
   const [recentChats, setRecentChats] = useState<any[]>([])
 
   useEffect(() => {
     if (token) {
-      api.analytics.getStats(token).then(setStatsData).catch(console.error)
-      api.chat.getSessions(token).then((sessions) => {
-        setRecentChats(sessions.slice(0, 3))
-      }).catch(console.error)
+      setStatsLoading(true)
+      Promise.all([
+        api.analytics.getStats(token),
+        api.chat.getSessions(token)
+      ])
+        .then(([stats, sessions]) => {
+          setStatsData(stats)
+          setRecentChats(sessions.slice(0, 3))
+        })
+        .catch(console.error)
+        .finally(() => setStatsLoading(false))
     }
   }, [token])
 
@@ -282,50 +291,77 @@ export default function HomePage() {
                       icon: <TrendingUp className="w-4 h-4" />,
                       content: (
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                          <Card variant="paper" padding="md">
-                            <div className="text-center">
-                              <div className="w-10 h-10 rounded-full bg-ink-light/10 flex items-center justify-center mx-auto mb-3">
-                                <MessageSquare className="w-4 h-4" />
-                              </div>
-                              <div className="text-2xl font-serif font-bold">
-                                {statsData?.conversations || '0'}
-                              </div>
-                              <div className="text-sm text-ink-gray">Conversations</div>
-                            </div>
-                          </Card>
-                          <Card variant="paper" padding="md">
-                            <div className="text-center">
-                              <div className="w-10 h-10 rounded-full bg-ink-light/10 flex items-center justify-center mx-auto mb-3">
-                                <Layers className="w-4 h-4" />
-                              </div>
-                              <div className="text-2xl font-serif font-bold">
-                                {statsData?.tokensUsed?.toLocaleString() || '0'}
-                              </div>
-                              <div className="text-sm text-ink-gray">Tokens Used</div>
-                            </div>
-                          </Card>
-                          <Card variant="paper" padding="md">
-                            <div className="text-center">
-                              <div className="w-10 h-10 rounded-full bg-ink-light/10 flex items-center justify-center mx-auto mb-3">
-                                <FileText className="w-4 h-4" />
-                              </div>
-                              <div className="text-2xl font-serif font-bold">
-                                {statsData?.documents || '0'}
-                              </div>
-                              <div className="text-sm text-ink-gray">Documents</div>
-                            </div>
-                          </Card>
-                          <Card variant="paper" padding="md">
-                            <div className="text-center">
-                              <div className="w-10 h-10 rounded-full bg-ink-light/10 flex items-center justify-center mx-auto mb-3">
-                                <TrendingUp className="w-4 h-4" />
-                              </div>
-                              <div className="text-2xl font-serif font-bold">
-                                {statsData?.accuracy || '97.8'}%
-                              </div>
-                              <div className="text-sm text-ink-gray">Accuracy</div>
-                            </div>
-                          </Card>
+                          {statsLoading ? (
+                            <>
+                              {[1, 2, 3, 4].map((i) => (
+                                <Card key={i} variant="paper" padding="md">
+                                  <div className="text-center">
+                                    <Skeleton className="w-10 h-10 rounded-full mx-auto mb-3" />
+                                    <Skeleton className="h-8 w-16 mx-auto mb-2" />
+                                    <Skeleton className="h-4 w-20 mx-auto" />
+                                  </div>
+                                </Card>
+                              ))}
+                            </>
+                          ) : (
+                            <>
+                              <Card variant="paper" padding="md">
+                                <div className="text-center">
+                                  <div className="w-10 h-10 rounded-full bg-ink-light/10 flex items-center justify-center mx-auto mb-3">
+                                    <MessageSquare className="w-4 h-4" />
+                                  </div>
+                                  <div className="text-2xl font-serif font-bold">
+                                    {statsData?.conversations || '0'}
+                                  </div>
+                                  <div className="text-sm text-ink-gray">Conversations</div>
+                                </div>
+                              </Card>
+                              <Card variant="paper" padding="md">
+                                <div className="text-center">
+                                  <div className="w-10 h-10 rounded-full bg-ink-light/10 flex items-center justify-center mx-auto mb-3">
+                                    <Layers className="w-4 h-4" />
+                                  </div>
+                                  <div className="text-2xl font-serif font-bold">
+                                    {statsData?.images || '0'}
+                                  </div>
+                                  <div className="text-sm text-ink-gray">Images</div>
+                                </div>
+                              </Card>
+                              <Card variant="paper" padding="md">
+                                <div className="text-center">
+                                  <div className="w-10 h-10 rounded-full bg-ink-light/10 flex items-center justify-center mx-auto mb-3">
+                                    <Cpu className="w-4 h-4" />
+                                  </div>
+                                  <div className="text-2xl font-serif font-bold">
+                                    {statsData?.tokensUsed?.toLocaleString() || '0'}
+                                  </div>
+                                  <div className="text-sm text-ink-gray">Tokens Used</div>
+                                </div>
+                              </Card>
+                              <Card variant="paper" padding="md">
+                                <div className="text-center">
+                                  <div className="w-10 h-10 rounded-full bg-ink-light/10 flex items-center justify-center mx-auto mb-3">
+                                    <FileText className="w-4 h-4" />
+                                  </div>
+                                  <div className="text-2xl font-serif font-bold">
+                                    {statsData?.documents || '0'}
+                                  </div>
+                                  <div className="text-sm text-ink-gray">Documents</div>
+                                </div>
+                              </Card>
+                              <Card variant="paper" padding="md">
+                                <div className="text-center">
+                                  <div className="w-10 h-10 rounded-full bg-ink-light/10 flex items-center justify-center mx-auto mb-3">
+                                    <TrendingUp className="w-4 h-4" />
+                                  </div>
+                                  <div className="text-2xl font-serif font-bold">
+                                    {statsData?.accuracy || '97.8'}%
+                                  </div>
+                                  <div className="text-sm text-ink-gray">Accuracy</div>
+                                </div>
+                              </Card>
+                            </>
+                          )}
                         </div>
                       ),
                     },
